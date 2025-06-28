@@ -1,59 +1,43 @@
-# UmmahWorks
+# TailorMe
 
-## 👥 Team
+## Team
 
 | Name            | Email                            | UTORid     |
 |-----------------|----------------------------------|------------|
 | Muhammad Bilal  | mb.bilal@mail.utoronto.ca        | bilalm15   |
 | Danish Mohammed | danish.mohammed@mail.utoronto.ca | moha2666   |
-| Sabrina Shams   | sabrina.shams@mail.utoronto.ca   | shamssab   |
 
+## Project Overview
 
----
-## 📌 Project Overview
+TailorMe is a smart resume tailoring platform designed to help job seekers productively create tailored applications.
 
-Create a comprehensive digital platform that connects Islamic institutions, such as Mosques, Islamic schools, and organizations, with qualified individuals for religious and educational roles (e.g., imams, teachers, speakers, management etc.).
+Users can upload a master resume, and then paste in a job description. The AI analyzes the job posting and creates a customized resume that includes relevant keywords, experience, and qualifications. Users can re-prompt to suggest further edits, or manually edit the resume themselves. Then, they can export the final resume as PDFs.
 
-The platform aims to resolve the current inefficiencies in how mosques and professionals connect, especially during high-demand periods like Ramadan. The current process is informal, fragmented, and often dependent on word-of-mouth or social media. It also seeks to expand into a broader Islamic professional network for community growth and opportunity discovery.
+TailorMe AI simplifies and elevates the job application process for students, new grads, and professionals aiming to increase their chances of getting noticed by applicant tracking systems (ATS) and recruiters.
 
-UmmahWorks serves as a centralized job and service board tailored for the Muslim community. Whether you're a mosque looking for a Qur’an reciter, a speaker, or a teacher, or a professional looking to serve — this platform bridges that gap.
-
----
-
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Frontend:** Next.js
 
----
-
 ## Additional Requirement
 
-We will implement the requirement of "A piece of the application is “real-time”, which means it can reflect other user changes without refreshing." This will be done for real-time notifications in the web application.
+We will implement the requirement: **"A piece of the application uses task queues to process data asynchronously independent of HTTP requests."**
 
----
+This will be done by integrating a **task queue system** that is triggered when the user clicks the **"Export PDF"** button. After downloading their final resume, a background task will:
 
-## 📌 Milestones
+- Automatically create a **summary of changes** made by the AI agent.
+- Email this summary to the user, along with their job description and final resume for personal bookkeeping purposes.
 
+## Milestones
 
 ### Alpha Milestones
 - **User Authentication & Payment**: Implement OAuth 2.0 login using Google and integrate Stripe Checkout for monthly subscription enforcement.
-- **User & Institution Profiles**: User profiles for professionals (e.g. Imams, Huffaz) and institutions (e.g. Mosques, Islamic schools), including fields like profile picture, bio, education, experience, relavent certifications/credentials, links, organisation description, etc.
-- **Event Promotion Feed**: Allow institutions to post community events (e.g., lectures, fundraisers) that users can browse, share (via link), and register for.
-
+- **Resume & Job Description Upload**: Allow users to upload their master resume and paste in a job description. Store them securely in the database.
 
 ### Beta Milestones
-- **Job Board Postings**: Enable institutions to post job opportunities (e.g. Teacher, Imam roles, lecturer) with application package.
-- **Job Board Feed**: Enable users to view available job opportunities and their details.
-- **Application Workflow**: Professionals can apply to roles, and institutions can manage applicants through various stages (e.g., shortlisted, interview, offer).
-- **Application Tracking Page**: A user and institution-facing timeline to show the current status of their job applications/postings, allowing them to track progress clearly.
-
+- **Targeted Resume Editor**: Use an AI agent to generate a custom resume based on the master resume and job description.
+- **Edit Interface**: Enable users to re-prompt suggestions or edit their generated resume directly in the browser.
 
 ### Final Version
-- **Job Board Filtering**: Enable users to search for job opportunities and filter via location, availability, and role.
-- **Real-Time Notifications**: Implement websocket-based notifications to display significant status changes (e.g., interview requested, application accepted) without requiring a page refresh.
-- **Integrated Calendar**: Include a calendar interface where users can manage availability, view scheduled interviews, see events registered for and more.
-
----
-
-
-
+- **Export Features**: Allow users to export tailored resume and cover letter as formatted PDFs.
+- **Email Summary**: Once exported, use a background task to generate a summary of the AI-driven edits and email it to the user along with the job description and final exported resume.
