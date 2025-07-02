@@ -2,10 +2,10 @@
 
 ## Team
 
-| Name            | Email                            | UTORid     |
-|-----------------|----------------------------------|------------|
-| Muhammad Bilal  | mb.bilal@mail.utoronto.ca        | bilalm15   |
-| Danish Mohammed | danish.mohammed@mail.utoronto.ca | moha2666   |
+| Name            | Email                            | UTORid   |
+| --------------- | -------------------------------- | -------- |
+| Muhammad Bilal  | mb.bilal@mail.utoronto.ca        | bilalm15 |
+| Danish Mohammed | danish.mohammed@mail.utoronto.ca | moha2666 |
 
 ## Project Overview
 
@@ -17,7 +17,7 @@ TailorMe AI simplifies and elevates the job application process for students, ne
 
 ## Tech Stack
 
-- **Frontend:** Next.js
+- **Frontend:** Angular.js
 
 ## Additional Requirement
 
@@ -31,13 +31,16 @@ This will be done by integrating a **task queue system** that is triggered when 
 ## Milestones
 
 ### Alpha Milestones
+
 - **User Authentication & Payment**: Implement OAuth 2.0 login using Google and integrate Stripe Checkout for monthly subscription enforcement.
 - **Resume & Job Description Upload**: Allow users to upload their master resume and paste in a job description. Store them securely in the database.
 
 ### Beta Milestones
+
 - **Targeted Resume Editor**: Use an AI agent to generate a custom resume based on the master resume and job description.
 - **Edit Interface**: Enable users to re-prompt suggestions or edit their generated resume directly in the browser.
 
 ### Final Version
+
 - **Export Features**: Allow users to export tailored resume and cover letter as formatted PDFs.
 - **Email Summary**: Once exported, use a background task to generate a summary of the AI-driven edits and email it to the user along with the job description and final exported resume.

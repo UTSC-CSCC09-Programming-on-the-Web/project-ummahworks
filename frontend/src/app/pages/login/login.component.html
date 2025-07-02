@@ -1,0 +1,14 @@
+<div class="login-container">
+  <div class="login-box">
+    <h1>TailorMe</h1>
+    <p>Smart resume tailoring platform for job seekers</p>
+
+    <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="oauth-signin">
+      <p>Sign in with your Google account:</p>
+      <div id="google-signin-button"></div>
+      <div *ngIf="loading" class="loading-message">Signing you in...</div>
+    </div>
+  </div>
+</div>

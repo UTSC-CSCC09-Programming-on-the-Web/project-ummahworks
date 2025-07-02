@@ -1,0 +1,50 @@
+import { Injectable } from "@angular/core";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { Observable } from "rxjs";
+import { environment } from "../../environments/environment";
+
+@Injectable({
+  providedIn: "root",
+})
+export class ApiService {
+  private endpoint = environment.apiUrl;
+
+  constructor(private http: HttpClient) {}
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem("authToken");
+    return new HttpHeaders().set("Authorization", `Bearer ${token}`);
+  }
+
+  checkHealth(): Observable<any> {
+    return this.http.get(`${this.endpoint}/health`);
+  }
+
+  getGoogleAuthUrl(): Observable<any> {
+    return this.http.get(`${this.endpoint}/auth/google`);
+  }
+
+  handleGoogleCallback(code: string): Observable<any> {
+    return this.http.post(`${this.endpoint}/auth/google/callback`, { code });
+  }
+
+  exchangeGoogleToken(idToken: string): Observable<any> {
+    return this.http.post(`${this.endpoint}/auth/token`, { idToken });
+  }
+
+  getCurrentUser(): Observable<any> {
+    return this.http.get(`${this.endpoint}/auth/user`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  logout(): Observable<any> {
+    return this.http.post(
+      `${this.endpoint}/auth/logout`,
+      {},
+      {
+        headers: this.getAuthHeaders(),
+      }
+    );
+  }
+}

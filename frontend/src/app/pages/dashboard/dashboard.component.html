@@ -1,0 +1,35 @@
+<div class="dashboard-container">
+  <div class="dashboard-content">
+    <div *ngIf="loading" class="loading-spinner">Loading...</div>
+
+    <div *ngIf="!loading">
+      <div class="dashboard-header">
+        <h1>Welcome to TailorMe Dashboard</h1>
+        <div class="user-info" *ngIf="user">
+          <span>{{ user.name || user.email }}</span>
+          <img
+            *ngIf="user.picture"
+            [src]="user.picture"
+            alt="Profile picture"
+            class="profile-pic"
+          />
+        </div>
+      </div>
+
+      <div class="dashboard-body">
+        <div class="dashboard-section">
+          <h2>Resume Management</h2>
+          <button class="btn action-btn">Upload Resume</button>
+          <button class="btn action-btn">Create New</button>
+        </div>
+
+        <div class="dashboard-section">
+          <h2>Recent Activity</h2>
+          <p *ngIf="true" class="empty-state">
+            No recent activity. Start by uploading your resume!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
