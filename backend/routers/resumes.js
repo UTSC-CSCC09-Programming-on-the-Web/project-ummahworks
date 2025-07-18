@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require('fs').promises;
 const authenticateToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
-const { Resume } = require('../models/resume');
+const { Resume } = require('../models/Resume');
 
 // Get all resumes for the authenticated user
 router.get('/', authenticateToken, async (req, res) => {
@@ -93,90 +93,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error deleting resume:', error);
     res.status(500).json({ error: 'Failed to delete resume' });
-  }
-});
-
-module.exports = router;
-      isMasterResume: resume.is_master_resume,
-      createdAt: resume.created_at,
-      updatedAt: resume.updated_at
-    });
-  } catch (error) {
-    console.error('Error fetching resume:', error);
-    res.status(500).json({ error: 'Failed to fetch resume' });
-  }
-});
-
-// Set a resume as master resume
-router.patch('/:id/master', authenticateToken, async (req, res) => {
-  try {
-    const resume = await Resume.setMasterResume(req.params.id, req.user.id);
-    
-    if (!resume) {
-      return res.status(404).json({ error: 'Resume not found' });
-    }
-
-    res.json({
-      message: 'Master resume updated successfully',
-      resume: {
-        id: resume.id,
-        originalFilename: resume.original_filename,
-        isMasterResume: resume.is_master_resume
-      }
-    });
-  } catch (error) {
-    console.error('Error setting master resume:', error);
-    res.status(500).json({ error: 'Failed to set master resume' });
-  }
-});
-
-// Delete a resume
-router.delete('/:id', authenticateToken, async (req, res) => {
-  try {
-    const resume = await Resume.findByIdAndUserId(req.params.id, req.user.id);
-    
-    if (!resume) {
-      return res.status(404).json({ error: 'Resume not found' });
-    }
-
-    // Delete the file from filesystem
-    try {
-      await fs.unlink(resume.file_path);
-    } catch (fileError) {
-      console.error('Error deleting file:', fileError);
-      // Continue with database deletion even if file deletion fails
-    }
-
-    // Delete from database
-    await Resume.delete(req.params.id, req.user.id);
-
-    res.json({ message: 'Resume deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting resume:', error);
-    res.status(500).json({ error: 'Failed to delete resume' });
-  }
-});
-
-// Download a resume file
-router.get('/:id/download', authenticateToken, async (req, res) => {
-  try {
-    const resume = await Resume.findByIdAndUserId(req.params.id, req.user.id);
-    
-    if (!resume) {
-      return res.status(404).json({ error: 'Resume not found' });
-    }
-
-    // Check if file exists
-    try {
-      await fs.access(resume.file_path);
-    } catch (error) {
-      return res.status(404).json({ error: 'File not found on server' });
-    }
-
-    res.download(resume.file_path, resume.original_filename);
-  } catch (error) {
-    console.error('Error downloading resume:', error);
-    res.status(500).json({ error: 'Failed to download resume' });
   }
 });
 

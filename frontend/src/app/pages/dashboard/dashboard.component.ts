@@ -27,6 +27,9 @@ export class DashboardComponent implements OnInit {
   };
   resumeUrl: SafeResourceUrl | null = null;
   promptText: string = '';
+  aiSuggestions: string = '';
+  aiLoading: boolean = false;
+  aiError: string = '';
 
   constructor(private api: ApiService, private router: Router, private sanitizer: DomSanitizer) {}
 
@@ -147,5 +150,22 @@ export class DashboardComponent implements OnInit {
 
   onViewAllActivity(): void {
     console.log('View all activity clicked');
+  }
+
+  getAISuggestions() {
+    this.aiSuggestions = '';
+    this.aiError = '';
+    this.aiLoading = true;
+    const token = localStorage.getItem('authToken') || '';
+    this.api.getAISuggestions(this.promptText, token).subscribe({
+      next: (res) => {
+        this.aiSuggestions = res.suggestions || JSON.stringify(res);
+        this.aiLoading = false;
+      },
+      error: (err) => {
+        this.aiError = err.error?.message || 'Failed to get suggestions.';
+        this.aiLoading = false;
+      }
+    });
   }
 }

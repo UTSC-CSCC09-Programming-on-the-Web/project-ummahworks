@@ -100,12 +100,16 @@
           <div class="edit-resume-interaction-panel">
             <div class="edit-suggestions-area">
               <h4>Suggestions</h4>
-              <div class="suggestion-placeholder">Suggestions will appear here.</div>
+              <div *ngIf="aiLoading" class="loading">Loading suggestions...</div>
+              <div *ngIf="aiError" class="error">{{ aiError }}</div>
+              <div *ngIf="aiSuggestions && !aiLoading" class="suggestions-result">
+                <pre>{{ aiSuggestions }}</pre>
+              </div>
             </div>
             <div class="edit-prompt-area">
               <label for="prompt-input">Ask me about your resume:</label>
               <textarea id="prompt-input" [(ngModel)]="promptText" rows="4" placeholder="Type your prompt here..."></textarea>
-              <button class="send-prompt-btn" disabled>Send</button>
+              <button (click)="getAISuggestions()" [disabled]="aiLoading || !promptText.trim()" class="send-prompt-btn">Send</button>
             </div>
           </div>
         </div>

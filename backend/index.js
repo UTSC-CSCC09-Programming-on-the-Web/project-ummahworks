@@ -6,7 +6,12 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const OpenAI = require("openai");
 require("dotenv").config();
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const app = express();
 
@@ -81,6 +86,27 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+app.post("/api/ai/suggestions", authenticateToken, async (req, res) => {
+  const { prompt } = req.body;
+
+  if (!prompt) {
+    return res.status(400).json({ error: "Prompt is required" });
+  }
+
+  try {
+    const response = await openai.completions.create({
+      model: "gpt-3.5-turbo-instruct",
+      prompt: `Analyze this resume and suggest keywords to add: ${prompt}`,
+      max_tokens: 150,
+    });
+
+    res.json({ suggestions: response.choices[0].text.trim() });
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    res.status(500).json({ error: "Failed to generate suggestions" });
+  }
+});
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "Backend is running!" });

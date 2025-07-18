@@ -64,4 +64,13 @@ export class ApiService {
       headers: this.getAuthHeaders(),
     });
   }
+
+  getAISuggestions(prompt: string, token: string): Observable<any> {
+    const url = `${this.endpoint}/ai/suggestions`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+    return this.http.post(url, { prompt }, { headers });
+  }
 }
