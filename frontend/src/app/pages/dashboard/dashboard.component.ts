@@ -2,13 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../services/api.service';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
 })
 export class DashboardComponent implements OnInit {
   user: any = null;
@@ -23,8 +25,10 @@ export class DashboardComponent implements OnInit {
     interviewsScheduled: 0,
     successRate: 0,
   };
+  resumeUrl: SafeResourceUrl | null = null;
+  promptText: string = '';
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(private api: ApiService, private router: Router, private sanitizer: DomSanitizer) {}
 
   ngOnInit(): void {
     const authToken = localStorage.getItem('authToken');
@@ -77,7 +81,7 @@ export class DashboardComponent implements OnInit {
   onUploadResume(): void {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = '.pdf,.doc,.docx,.txt';
+    fileInput.accept = '.pdf'; // Only allow PDF
     fileInput.addEventListener('change', (event: any) => {
       const file = event.target.files[0];
       if (file) {
@@ -88,12 +92,10 @@ export class DashboardComponent implements OnInit {
   }
 
   private handleFileUpload(file: File): void {
-    const allowedTypes = ['application/pdf', 'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain'];
+    const allowedTypes = ['application/pdf']; // Only PDF
 
     if (!allowedTypes.includes(file.type)) {
-      this.uploadStatus = 'Invalid file type. Please upload PDF, DOC, DOCX, or TXT files only.';
+      this.uploadStatus = 'Invalid file type. Please upload PDF files only.';
       return;
     }
 
@@ -111,7 +113,10 @@ export class DashboardComponent implements OnInit {
         this.uploadStatus = 'File uploaded successfully!';
         this.uploadProgress = false;
         this.hasActivity = true;
-        console.log('Upload successful:', response);
+        // Set up PDF preview
+        const url = URL.createObjectURL(file);
+        this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        console.log('Resume URL:', this.resumeUrl);
       },
       error: (error) => {
         this.uploadStatus = `Upload failed: ${error.error?.message || 'Unknown error'}`;

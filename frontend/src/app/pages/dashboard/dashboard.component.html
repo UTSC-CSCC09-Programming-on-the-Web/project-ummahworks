@@ -50,94 +50,63 @@
           {{ uploadStatus }}
         </div>
 
-        <!-- Uploaded File Info -->
-        <div *ngIf="uploadedFile && !uploadProgress" class="uploaded-file-info">
-          <div class="file-info-card">
-            <div class="file-icon">📄</div>
-            <div class="file-details">
-              <span class="file-name">{{ uploadedFile.name }}</span>
-              <span class="file-size">{{ (uploadedFile.size / 1024 / 1024).toFixed(2) }} MB</span>
-            </div>
-            <div class="file-actions">
-              <button class="view-file-btn" (click)="onViewFile()">View</button>
-            </div>
-          </div>
-        </div>
-
+        <!-- Quick Action Cards -->
         <div class="action-cards">
-          <div
-            class="action-card primary-card"
-            (click)="onUploadResume()"
-          >
+          <div class="action-card primary-card" (click)="onUploadResume()">
             <div class="card-icon">
-              <svg
-                class="icon-upload"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
+              <svg class="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7,10 12,15 17,10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
             </div>
             <h3 class="card-title">Upload Resume</h3>
-            <p class="card-description">
-              Upload your master resume to get started
-            </p>
+            <p class="card-description">Upload your master resume to get started</p>
             <div class="card-action">Get Started →</div>
           </div>
-
-          <div
-            class="action-card secondary-card"
-            (click)="onCreateNew()"
-          >
+          <div class="action-card secondary-card" (click)="onCreateNew()">
             <div class="card-icon">
-              <svg
-                class="icon-create"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
+              <svg class="icon-create" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
               </svg>
             </div>
             <h3 class="card-title">Create Tailored Resume</h3>
-            <p class="card-description">
-              Generate a custom resume for specific job opportunities
-            </p>
+            <p class="card-description">Generate a custom resume for specific job opportunities</p>
             <div class="card-action">Create Now →</div>
           </div>
-
-          <div
-            class="action-card tertiary-card"
-            (click)="onViewTemplates()"
-          >
+          <div class="action-card tertiary-card" (click)="onViewTemplates()">
             <div class="card-icon">
-              <svg
-                class="icon-template"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <rect
-                  x="3"
-                  y="3"
-                  width="18"
-                  height="18"
-                  rx="2"
-                  ry="2"
-                ></rect>
+              <svg class="icon-template" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="9" y1="9" x2="15" y2="9"></line>
                 <line x1="9" y1="12" x2="15" y2="12"></line>
                 <line x1="9" y1="15" x2="15" y2="15"></line>
               </svg>
             </div>
             <h3 class="card-title">Browse Templates</h3>
-            <p class="card-description">
-              Explore professional resume templates
-            </p>
+            <p class="card-description">Explore professional resume templates</p>
             <div class="card-action">View All →</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Edit Resume Section -->
+      <section *ngIf="uploadedFile && uploadedFile.type === 'application/pdf' && !uploadProgress" class="edit-resume-section">
+        <h2 class="edit-resume-title">Edit Resume</h2>
+        <div class="edit-resume-wrapper">
+          <div class="edit-resume-viewer">
+            <iframe [src]="resumeUrl" class="edit-resume-iframe"></iframe>
+          </div>
+          <div class="edit-resume-interaction-panel">
+            <div class="edit-suggestions-area">
+              <h4>Suggestions</h4>
+              <div class="suggestion-placeholder">Suggestions will appear here.</div>
+            </div>
+            <div class="edit-prompt-area">
+              <label for="prompt-input">Ask me about your resume:</label>
+              <textarea id="prompt-input" [(ngModel)]="promptText" rows="4" placeholder="Type your prompt here..."></textarea>
+              <button class="send-prompt-btn" disabled>Send</button>
+            </div>
           </div>
         </div>
       </section>
