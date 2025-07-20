@@ -21,12 +21,14 @@ export class LoginComponent implements OnInit {
   constructor(private api: ApiService, private router: Router) {}
 
   ngOnInit(): void {
-    if (localStorage.getItem("authToken")) {
-      this.router.navigate(["/dashboard"]);
-      return;
-    }
-
-    this.initializeGoogleSignIn();
+    this.api.getCurrentUser().subscribe({
+      next: () => {
+        this.router.navigate(["/dashboard"]);
+      },
+      error: () => {
+        this.initializeGoogleSignIn();
+      },
+    });
   }
 
   private initializeGoogleSignIn(): void {
@@ -41,7 +43,7 @@ export class LoginComponent implements OnInit {
         {
           theme: "outline",
           size: "large",
-          width: "100%",
+          width: 300,
           text: "signin_with",
         }
       );
@@ -56,13 +58,32 @@ export class LoginComponent implements OnInit {
 
     this.api.exchangeGoogleToken(response.credential).subscribe({
       next: (authResponse) => {
-        localStorage.setItem("authToken", authResponse.token);
         localStorage.setItem("user", JSON.stringify(authResponse.user));
-        this.router.navigate(["/dashboard"]);
+
+        if (authResponse.subscription) {
+          if (authResponse.subscription.isActive) {
+            this.router.navigate(["/dashboard"]);
+          } else {
+            this.router.navigate(["/payment"]);
+          }
+        } else {
+          this.router.navigate(["/payment"]);
+        }
       },
       error: (err) => {
-        this.errorMessage =
-          err.error?.message || "Authentication failed. Please try again.";
+        if (err.status === 429) {
+          this.errorMessage =
+            "Too many login attempts. Please try again later.";
+        } else if (err.status === 401) {
+          this.errorMessage = "Authentication failed. Please try again.";
+        } else if (err.status === 0) {
+          this.errorMessage =
+            "Unable to connect to server. Please check your internet connection.";
+        } else {
+          this.errorMessage =
+            err.error?.error || "Login failed. Please try again.";
+        }
+
         this.loading = false;
       },
     });

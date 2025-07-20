@@ -1,0 +1,31 @@
+<div class="payment-container">
+  <div class="payment-box">
+    <h1>Subscribe to TailorMe</h1>
+    <p>Get unlimited access to AI-powered resume tailoring</p>
+
+    <div class="pricing-card">
+      <h2>Monthly Plan</h2>
+      <div class="price">$9.99<span>/month</span></div>
+      <ul class="features">
+        <li>✓ AI-powered resume tailoring</li>
+        <li>✓ PDF export</li>
+        <li>✓ Email summaries</li>
+      </ul>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <button
+      class="subscribe-btn"
+      (click)="startCheckout()"
+      [disabled]="loading"
+    >
+      <span *ngIf="!loading">Subscribe Now</span>
+      <span *ngIf="loading">Processing...</span>
+    </button>
+
+    <p class="secure-note">
+      <small>Secure payment powered by Stripe • Cancel anytime</small>
+    </p>
+  </div>
+</div>

@@ -17,7 +17,14 @@ export class HeaderComponent implements OnInit {
   constructor(private api: ApiService, private router: Router) {}
 
   ngOnInit(): void {
-    this.isAuthenticated = !!localStorage.getItem("authToken");
+    this.api.getCurrentUser().subscribe({
+      next: () => {
+        this.isAuthenticated = true;
+      },
+      error: () => {
+        this.isAuthenticated = false;
+      },
+    });
   }
 
   logout(): void {
@@ -32,7 +39,6 @@ export class HeaderComponent implements OnInit {
   }
 
   private clearAuthData(): void {
-    localStorage.removeItem("authToken");
     localStorage.removeItem("user");
     this.isAuthenticated = false;
     this.router.navigate(["/login"]);
