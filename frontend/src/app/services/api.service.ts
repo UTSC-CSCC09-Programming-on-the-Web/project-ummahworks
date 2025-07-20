@@ -67,4 +67,30 @@ export class ApiService {
       this.getHttpOptions()
     );
   }
+
+  // Simple file upload without database storage
+  uploadResume(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append("resume", file);
+
+    return this.http.post(`${this.endpoint}/resumes/upload`, formData, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  // Get uploaded file info (just returns file metadata)
+  getUploadedResumes(): Observable<any> {
+    return this.http.get(`${this.endpoint}/resumes`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  getAISuggestions(prompt: string, token: string): Observable<any> {
+    const url = `${this.endpoint}/ai/suggestions`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+    return this.http.post(url, { prompt }, { headers });
+  }
 }

@@ -11,6 +11,10 @@ const { body, validationResult } = require("express-validator");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 require("dotenv").config();
 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 const app = express();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -50,6 +54,49 @@ app.post(
 
 app.use(express.json());
 app.use(cookieParser());
+
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, "resume-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+  ];
+
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        "Invalid file type. Only PDF, DOC, DOCX, and TXT files are allowed."
+      ),
+      false
+    );
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+});
 
 const corsOptions = {
   origin: [
@@ -146,6 +193,27 @@ const requireActiveSubscription = async (req, res, next) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+app.post("/api/ai/suggestions", authenticateToken, async (req, res) => {
+  const { prompt } = req.body;
+
+  if (!prompt) {
+    return res.status(400).json({ error: "Prompt is required" });
+  }
+
+  try {
+    const response = await openai.completions.create({
+      model: "gpt-3.5-turbo-instruct",
+      prompt: `Analyze this resume and suggest keywords to add: ${prompt}`,
+      max_tokens: 150,
+    });
+
+    res.json({ suggestions: response.choices[0].text.trim() });
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    res.status(500).json({ error: "Failed to generate suggestions" });
+  }
+});
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "Backend is running!" });
@@ -455,6 +523,48 @@ process.on("SIGTERM", async () => {
   await sequelize.close();
   process.exit(0);
 });
+
+app.post(
+  "/api/resumes/upload",
+  authenticateToken,
+  upload.single("resume"),
+  (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      res.json({
+        message: "File uploaded successfully",
+        file: {
+          originalName: req.file.originalname,
+          filename: req.file.filename,
+          size: req.file.size,
+          mimetype: req.file.mimetype,
+          uploadTime: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ error: "Upload failed" });
+    }
+  }
+);
+
+app.get("/api/resumes", authenticateToken, (req, res) => {
+  try {
+    res.json({
+      message: "Resume endpoint working",
+      hasFiles:
+        fs.existsSync(uploadsDir) && fs.readdirSync(uploadsDir).length > 0,
+    });
+  } catch (error) {
+    console.error("Error checking files:", error);
+    res.status(500).json({ error: "Failed to check files" });
+  }
+});
+
+app.use("/uploads", express.static(uploadsDir));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
