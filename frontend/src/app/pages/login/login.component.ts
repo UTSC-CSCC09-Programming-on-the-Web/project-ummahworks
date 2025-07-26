@@ -18,7 +18,10 @@ export class LoginComponent implements OnInit {
   errorMessage: string = "";
   loading: boolean = false;
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(
+    private api: ApiService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.api.getCurrentUser().subscribe({
@@ -45,7 +48,7 @@ export class LoginComponent implements OnInit {
           size: "large",
           width: 300,
           text: "signin_with",
-        }
+        },
       );
     } else {
       setTimeout(() => this.initializeGoogleSignIn(), 100);

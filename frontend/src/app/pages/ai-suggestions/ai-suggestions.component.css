@@ -1,7 +1,7 @@
 .ai-suggestions-container {
   background: #fff;
   border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.10);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.1);
   padding: 2.5rem 2rem;
   margin: 2.5rem auto;
   max-width: 600px;
@@ -62,4 +62,4 @@ pre {
   word-break: break-word;
   font-size: 1rem;
   color: #2d3748;
-} 
+}

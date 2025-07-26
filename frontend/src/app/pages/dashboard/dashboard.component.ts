@@ -19,6 +19,7 @@ export class DashboardComponent implements OnInit {
   uploadedFile: File | null = null;
   uploadStatus: string = "";
   uploadProgress = false;
+  resumes: any[] = [];
   stats = {
     resumesCreated: 0,
     applicationsSubmitted: 0,
@@ -34,7 +35,7 @@ export class DashboardComponent implements OnInit {
   constructor(
     private api: ApiService,
     private router: Router,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {
@@ -49,6 +50,7 @@ export class DashboardComponent implements OnInit {
         this.user = user;
         localStorage.setItem("user", JSON.stringify(user));
         this.loading = false;
+        this.loadResumes(); // Load resumes after user is authenticated
       },
       error: (err: any) => {
         console.error("Failed to get dashboard data:", err);
@@ -72,6 +74,29 @@ export class DashboardComponent implements OnInit {
         successRate: 25,
       };
     }, 1000);
+  }
+
+  private loadResumes(): void {
+    this.api.getUploadedResumes().subscribe({
+      next: (resumes: any[]) => {
+        this.resumes = resumes;
+        this.hasActivity = resumes.length > 0;
+        // Set the most recent resume as the current one
+        if (resumes.length > 0) {
+          const latestResume = resumes[resumes.length - 1];
+          this.uploadedFile = new File([], latestResume.originalName, {
+            type: latestResume.fileType,
+          });
+          // Create a URL for the resume from the backend
+          this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+            `${this.api.endpoint}/uploads/${latestResume.fileName}`,
+          );
+        }
+      },
+      error: (error) => {
+        console.error("Failed to load resumes:", error);
+      },
+    });
   }
 
   onUploadResume(): void {
@@ -113,6 +138,7 @@ export class DashboardComponent implements OnInit {
         const url = URL.createObjectURL(file);
         this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
         console.log("Resume URL:", this.resumeUrl);
+        this.loadResumes(); // Reload resumes from database after upload
       },
       error: (error) => {
         this.uploadStatus = `Upload failed: ${
@@ -162,5 +188,37 @@ export class DashboardComponent implements OnInit {
         this.aiLoading = false;
       },
     });
+  }
+
+  viewResume(resume: any): void {
+    // Set this resume as the current one for viewing
+    this.uploadedFile = new File([], resume.originalName, {
+      type: resume.fileType,
+    });
+    this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+      `${this.api.endpoint}/uploads/${resume.fileName}`,
+    );
+  }
+
+  deleteResume(resumeId: number): void {
+    if (confirm("Are you sure you want to delete this resume?")) {
+      this.api.deleteResume(resumeId).subscribe({
+        next: () => {
+          // Remove from local array
+          this.resumes = this.resumes.filter((r) => r.id !== resumeId);
+          this.hasActivity = this.resumes.length > 0;
+
+          // If this was the currently viewed resume, clear the viewer
+          if (this.uploadedFile && this.resumes.length === 0) {
+            this.uploadedFile = null;
+            this.resumeUrl = null;
+          }
+        },
+        error: (error) => {
+          console.error("Failed to delete resume:", error);
+          alert("Failed to delete resume. Please try again.");
+        },
+      });
+    }
   }
 }

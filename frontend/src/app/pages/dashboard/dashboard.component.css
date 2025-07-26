@@ -29,8 +29,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .dashboard-layout {
@@ -161,13 +165,17 @@
 }
 
 .action-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
+  background: linear-gradient(
+    135deg,
+    var(--card-gradient-start),
+    var(--card-gradient-end)
+  );
   opacity: 0;
   transition: opacity 0.3s ease;
   z-index: -1;
@@ -205,7 +213,11 @@
   width: 3rem;
   height: 3rem;
   border-radius: 0.75rem;
-  background: linear-gradient(135deg, var(--card-gradient-start), var(--card-gradient-end));
+  background: linear-gradient(
+    135deg,
+    var(--card-gradient-start),
+    var(--card-gradient-end)
+  );
   display: flex;
   align-items: center;
   justify-content: center;
@@ -476,21 +488,21 @@
   .dashboard-container {
     padding: 1rem 0.5rem;
   }
-  
+
   .hero-section {
     flex-direction: column;
     gap: 1.5rem;
     text-align: center;
   }
-  
+
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .action-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -500,7 +512,7 @@
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .section-header {
     flex-direction: column;
     gap: 1rem;
@@ -512,7 +524,7 @@
 .edit-resume-section {
   background: #fff;
   border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.10);
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.1);
   padding: 2.5rem 2rem;
   margin: 2.5rem auto;
   width: 100%;
@@ -648,4 +660,91 @@
     height: 40vh;
     min-height: 180px;
   }
+}
+
+/* Resumes Section */
+.resumes-section {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.resumes-content {
+  margin-top: 1.5rem;
+}
+
+.resumes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.resume-card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resume-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.resume-info {
+  flex: 1;
+}
+
+.resume-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  word-break: break-word;
+}
+
+.resume-details {
+  font-size: 0.875rem;
+  color: #718096;
+  margin: 0;
+}
+
+.resume-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+}
+
+.resume-action-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #667eea;
+  color: white;
+}
+
+.resume-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.resume-action-btn.delete {
+  background: #e53e3e;
+}
+
+.resume-action-btn.delete:hover {
+  background: #c53030;
+  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
 }

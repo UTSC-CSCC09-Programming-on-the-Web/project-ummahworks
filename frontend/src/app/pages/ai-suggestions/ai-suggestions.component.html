@@ -2,8 +2,15 @@
   <h2>AI Suggestions</h2>
   <div class="prompt-section">
     <label for="ai-prompt">Enter your prompt:</label>
-    <textarea id="ai-prompt" [(ngModel)]="prompt" rows="4" placeholder="Type your prompt here..."></textarea>
-    <button (click)="getSuggestions()" [disabled]="loading || !prompt.trim()">Get Suggestions</button>
+    <textarea
+      id="ai-prompt"
+      [(ngModel)]="prompt"
+      rows="4"
+      placeholder="Type your prompt here..."
+    ></textarea>
+    <button (click)="getSuggestions()" [disabled]="loading || !prompt.trim()">
+      Get Suggestions
+    </button>
   </div>
   <div *ngIf="loading" class="loading">Loading suggestions...</div>
   <div *ngIf="error" class="error">{{ error }}</div>
@@ -11,4 +18,4 @@
     <h3>Suggestions</h3>
     <pre>{{ suggestions }}</pre>
   </div>
-</div> 
+</div>

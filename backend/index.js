@@ -5,10 +5,16 @@ const jwt = require("jsonwebtoken");
 const { sequelize } = require("./datasource");
 const { User } = require("./models/users");
 const { Session } = require("./models/sessions");
+const { Resume } = require("./models/Resume");
 const crypto = require("crypto");
 const cookieParser = require("cookie-parser");
 const { body, validationResult } = require("express-validator");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const OpenAI = require("openai");
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+
 require("dotenv").config();
 
 const openai = new OpenAI({
@@ -40,7 +46,7 @@ app.post(
 
         const [updated] = await User.update(
           { lastPaid: new Date() },
-          { where: { stripeCustomerId: customerId } }
+          { where: { stripeCustomerId: customerId } },
         );
       }
 
@@ -49,7 +55,7 @@ app.post(
       console.error("Error processing webhook:", error);
       res.status(500).json({ error: "Webhook processing failed" });
     }
-  }
+  },
 );
 
 app.use(express.json());
@@ -83,9 +89,9 @@ const fileFilter = (req, file, cb) => {
   } else {
     cb(
       new Error(
-        "Invalid file type. Only PDF, DOC, DOCX, and TXT files are allowed."
+        "Invalid file type. Only PDF, DOC, DOCX, and TXT files are allowed.",
       ),
-      false
+      false,
     );
   }
 };
@@ -115,6 +121,8 @@ app.use(cors(corsOptions));
 
 User.hasMany(Session, { foreignKey: "userId" });
 Session.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
+User.hasMany(Resume, { foreignKey: "userId" });
+Resume.belongsTo(User, { foreignKey: "userId" });
 
 (async () => {
   try {
@@ -126,73 +134,10 @@ Session.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
   }
 })();
 
-const authenticateToken = async (req, res, next) => {
-  let token = req.cookies?.authToken;
-
-  if (!token) {
-    const authHeader = req.headers["authorization"];
-    token = authHeader && authHeader.split(" ")[1];
-  }
-
-  if (!token) {
-    return res.status(401).json({ error: "No token provided" });
-  }
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const session = await Session.findOne({
-      where: { token },
-      include: [{ model: User }],
-    });
-
-    if (!session || session.expiresAt < new Date()) {
-      if (session) await Session.destroy({ where: { id: session.id } });
-      return res.status(403).json({ error: "Session expired" });
-    }
-
-    req.user = {
-      id: session.User.id,
-      googleId: session.User.googleId,
-      email: session.User.email,
-      name: session.User.name,
-      picture: session.User.picture,
-    };
-    req.sessionId = session.id;
-    next();
-  } catch (error) {
-    console.error("Token verification error:", error);
-    return res.status(403).json({ error: "Invalid or expired token" });
-  }
-};
-
-const requireActiveSubscription = async (req, res, next) => {
-  try {
-    const user = await User.findByPk(req.user.id);
-
-    if (!user.lastPaid) {
-      return res.status(402).json({
-        error: "Subscription required",
-        needsSubscription: true,
-      });
-    }
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    if (user.lastPaid < thirtyDaysAgo) {
-      return res.status(402).json({
-        error: "Subscription expired",
-        needsSubscription: true,
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error("Subscription check error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};
+const {
+  authenticateToken,
+  requireActiveSubscription,
+} = require("./middleware/auth");
 
 app.post("/api/ai/suggestions", authenticateToken, async (req, res) => {
   const { prompt } = req.body;
@@ -268,7 +213,7 @@ app.post(
             name: userData.name,
             picture: userData.picture,
           },
-          { where: { id: user.id } }
+          { where: { id: user.id } },
         );
         user = await User.findByPk(user.id);
       }
@@ -339,7 +284,7 @@ app.post(
       console.error("Authentication error:", error);
       res.status(401).json({ error: "Authentication failed" });
     }
-  }
+  },
 );
 
 app.get("/api/auth/user", authenticateToken, async (req, res) => {
@@ -400,7 +345,7 @@ app.post(
 
         await User.update(
           { stripeCustomerId: customer.id },
-          { where: { id: user.id } }
+          { where: { id: user.id } },
         );
       }
 
@@ -423,7 +368,7 @@ app.post(
       console.error("Checkout session creation error:", error);
       res.status(500).json({ error: "Failed to create checkout session" });
     }
-  }
+  },
 );
 
 app.get(
@@ -455,7 +400,7 @@ app.get(
       console.error("Error fetching dashboard data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
-  }
+  },
 );
 
 app.post("/api/auth/logout", authenticateToken, async (req, res) => {
@@ -508,6 +453,16 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: "Internal server error" });
 });
 
+const resumesRouter = require("./routers/resumes");
+app.use("/api/resumes", resumesRouter);
+
+app.use("/uploads", express.static(uploadsDir));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Backend listening on port ${PORT}`);
+});
+
 app.use("*", (req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
@@ -522,51 +477,4 @@ process.on("SIGTERM", async () => {
   console.log("Shutting down gracefully...");
   await sequelize.close();
   process.exit(0);
-});
-
-app.post(
-  "/api/resumes/upload",
-  authenticateToken,
-  upload.single("resume"),
-  (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded" });
-      }
-
-      res.json({
-        message: "File uploaded successfully",
-        file: {
-          originalName: req.file.originalname,
-          filename: req.file.filename,
-          size: req.file.size,
-          mimetype: req.file.mimetype,
-          uploadTime: new Date().toISOString(),
-        },
-      });
-    } catch (error) {
-      console.error("Upload error:", error);
-      res.status(500).json({ error: "Upload failed" });
-    }
-  }
-);
-
-app.get("/api/resumes", authenticateToken, (req, res) => {
-  try {
-    res.json({
-      message: "Resume endpoint working",
-      hasFiles:
-        fs.existsSync(uploadsDir) && fs.readdirSync(uploadsDir).length > 0,
-    });
-  } catch (error) {
-    console.error("Error checking files:", error);
-    res.status(500).json({ error: "Failed to check files" });
-  }
-});
-
-app.use("/uploads", express.static(uploadsDir));
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Backend listening on port ${PORT}`);
 });

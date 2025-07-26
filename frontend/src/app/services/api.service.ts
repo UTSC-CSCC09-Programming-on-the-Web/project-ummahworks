@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { environment } from "../../environments/environment";
 
@@ -7,7 +7,7 @@ import { environment } from "../../environments/environment";
   providedIn: "root",
 })
 export class ApiService {
-  private endpoint = environment.apiUrl;
+  public endpoint = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -15,6 +15,11 @@ export class ApiService {
     return {
       withCredentials: true,
     };
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem("authToken");
+    return new HttpHeaders().set("Authorization", `Bearer ${token}`);
   }
 
   checkHealth(): Observable<any> {
@@ -25,7 +30,7 @@ export class ApiService {
     return this.http.post(
       `${this.endpoint}/auth/token`,
       { idToken },
-      this.getHttpOptions()
+      this.getHttpOptions(),
     );
   }
 
@@ -41,7 +46,7 @@ export class ApiService {
     return this.http.post(
       `${this.endpoint}/auth/logout`,
       {},
-      this.getHttpOptions()
+      this.getHttpOptions(),
     );
   }
 
@@ -49,7 +54,7 @@ export class ApiService {
     return this.http.post(
       `${this.endpoint}/auth/logout-all`,
       {},
-      this.getHttpOptions()
+      this.getHttpOptions(),
     );
   }
 
@@ -57,14 +62,14 @@ export class ApiService {
     return this.http.post(
       `${this.endpoint}/subscription/create-checkout`,
       {},
-      this.getHttpOptions()
+      this.getHttpOptions(),
     );
   }
   syncSubscription(): Observable<any> {
     return this.http.post(
       `${this.endpoint}/test/sync-subscription`,
       {},
-      this.getHttpOptions()
+      this.getHttpOptions(),
     );
   }
 
@@ -85,12 +90,15 @@ export class ApiService {
     });
   }
 
+  // Delete a resume
+  deleteResume(resumeId: number): Observable<any> {
+    return this.http.delete(`${this.endpoint}/resumes/${resumeId}`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
   getAISuggestions(prompt: string, token: string): Observable<any> {
     const url = `${this.endpoint}/ai/suggestions`;
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
-    return this.http.post(url, { prompt }, { headers });
+    return this.http.post(url, { prompt }, { headers: this.getAuthHeaders() });
   }
 }

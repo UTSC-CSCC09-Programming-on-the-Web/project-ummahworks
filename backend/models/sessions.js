@@ -30,7 +30,7 @@ const Session = sequelize.define(
     timestamps: true,
     createdAt: "createdAt",
     updatedAt: "updatedAt",
-  }
+  },
 );
 
 module.exports = { Session };

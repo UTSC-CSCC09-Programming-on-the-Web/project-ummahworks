@@ -14,7 +14,10 @@ export class PaymentComponent implements OnInit {
   loading = false;
   errorMessage = "";
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(
+    private api: ApiService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.api.getCurrentUser().subscribe({

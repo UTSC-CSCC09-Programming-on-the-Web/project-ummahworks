@@ -14,7 +14,10 @@ import { ApiService } from "../../services/api.service";
 export class HeaderComponent implements OnInit {
   isAuthenticated = false;
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(
+    private api: ApiService,
+    private router: Router,
+  ) {}
 
   ngOnInit(): void {
     this.api.getCurrentUser().subscribe({

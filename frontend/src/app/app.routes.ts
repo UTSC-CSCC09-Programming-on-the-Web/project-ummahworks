@@ -21,7 +21,7 @@ const authGuard = () => {
       }
       router.navigate(["/login"]);
       return of(false);
-    })
+    }),
   );
 };
 
