@@ -46,7 +46,7 @@ app.post(
 
         const [updated] = await User.update(
           { lastPaid: new Date() },
-          { where: { stripeCustomerId: customerId } },
+          { where: { stripeCustomerId: customerId } }
         );
       }
 
@@ -55,7 +55,7 @@ app.post(
       console.error("Error processing webhook:", error);
       res.status(500).json({ error: "Webhook processing failed" });
     }
-  },
+  }
 );
 
 app.use(express.json());
@@ -78,21 +78,13 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
-    "application/pdf",
-    "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "text/plain",
   ];
 
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(
-      new Error(
-        "Invalid file type. Only PDF, DOC, DOCX, and TXT files are allowed.",
-      ),
-      false,
-    );
+    cb(new Error("Invalid file type. Only DOCX files are allowed."), false);
   }
 };
 
@@ -100,7 +92,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
@@ -226,7 +218,7 @@ app.post(
             name: userData.name,
             picture: userData.picture,
           },
-          { where: { id: user.id } },
+          { where: { id: user.id } }
         );
         user = await User.findByPk(user.id);
       }
@@ -297,7 +289,7 @@ app.post(
       console.error("Authentication error:", error);
       res.status(401).json({ error: "Authentication failed" });
     }
-  },
+  }
 );
 
 app.get("/api/auth/user", authenticateToken, async (req, res) => {
@@ -358,7 +350,7 @@ app.post(
 
         await User.update(
           { stripeCustomerId: customer.id },
-          { where: { id: user.id } },
+          { where: { id: user.id } }
         );
       }
 
@@ -381,7 +373,7 @@ app.post(
       console.error("Checkout session creation error:", error);
       res.status(500).json({ error: "Failed to create checkout session" });
     }
-  },
+  }
 );
 
 app.get(
@@ -413,7 +405,7 @@ app.get(
       console.error("Error fetching dashboard data:", error);
       res.status(500).json({ error: "Internal server error" });
     }
-  },
+  }
 );
 
 app.post("/api/auth/logout", authenticateToken, async (req, res) => {
