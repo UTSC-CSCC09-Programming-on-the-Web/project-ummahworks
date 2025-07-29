@@ -43,6 +43,7 @@ export class HeaderComponent implements OnInit {
 
   private clearAuthData(): void {
     localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
     this.isAuthenticated = false;
     this.router.navigate(["/login"]);
   }

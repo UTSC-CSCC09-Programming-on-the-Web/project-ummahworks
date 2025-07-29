@@ -124,14 +124,27 @@ Session.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
 User.hasMany(Resume, { foreignKey: "userId" });
 Resume.belongsTo(User, { foreignKey: "userId" });
 
-(async () => {
-  try {
-    await sequelize.authenticate();
-    console.log("Database connection established successfully.");
-  } catch (error) {
-    console.error("Unable to connect to the database:", error);
-    process.exit(1);
+const connectWithRetry = async (maxRetries = 10, delay = 2000) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await sequelize.authenticate();
+      console.log("Database connection established successfully.");
+      return;
+    } catch (error) {
+      console.error(`Database connection attempt ${i + 1} failed:`, error.message);
+      if (i < maxRetries - 1) {
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        console.error("Unable to connect to the database after all retries:", error);
+        process.exit(1);
+      }
+    }
   }
+};
+
+(async () => {
+  await connectWithRetry();
 })();
 
 const {

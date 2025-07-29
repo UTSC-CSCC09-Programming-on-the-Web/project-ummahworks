@@ -25,10 +25,10 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getCurrentUser().subscribe({
-      next: () => {
+      next: (user) => {
         this.router.navigate(["/dashboard"]);
       },
-      error: () => {
+      error: (error) => {
         this.initializeGoogleSignIn();
       },
     });

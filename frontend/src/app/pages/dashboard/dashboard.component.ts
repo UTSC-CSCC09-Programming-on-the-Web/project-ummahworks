@@ -39,11 +39,6 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) {
-      this.router.navigate(["/login"]);
-      return;
-    }
     this.loading = true;
     this.api.getCurrentUser().subscribe({
       next: (user: any) => {
@@ -55,6 +50,7 @@ export class DashboardComponent implements OnInit {
       error: (err: any) => {
         console.error("Failed to get dashboard data:", err);
         localStorage.removeItem("user");
+        localStorage.removeItem("authToken");
         if (err.status === 402) {
           this.router.navigate(["/payment"]);
         } else {
@@ -89,7 +85,7 @@ export class DashboardComponent implements OnInit {
           });
           // Create a URL for the resume from the backend
           this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-            `${this.api.endpoint}/uploads/${latestResume.fileName}`,
+            `/uploads/${latestResume.fileName}`,
           );
         }
       },
@@ -196,7 +192,7 @@ export class DashboardComponent implements OnInit {
       type: resume.fileType,
     });
     this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-      `${this.api.endpoint}/uploads/${resume.fileName}`,
+      `/uploads/${resume.fileName}`,
     );
   }
 

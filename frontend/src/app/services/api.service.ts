@@ -78,27 +78,21 @@ export class ApiService {
     const formData = new FormData();
     formData.append("resume", file);
 
-    return this.http.post(`${this.endpoint}/resumes/upload`, formData, {
-      headers: this.getAuthHeaders(),
-    });
+    return this.http.post(`${this.endpoint}/resumes/upload`, formData, this.getHttpOptions());
   }
 
   // Get uploaded file info (just returns file metadata)
   getUploadedResumes(): Observable<any> {
-    return this.http.get(`${this.endpoint}/resumes`, {
-      headers: this.getAuthHeaders(),
-    });
+    return this.http.get(`${this.endpoint}/resumes`, this.getHttpOptions());
   }
 
   // Delete a resume
   deleteResume(resumeId: number): Observable<any> {
-    return this.http.delete(`${this.endpoint}/resumes/${resumeId}`, {
-      headers: this.getAuthHeaders(),
-    });
+    return this.http.delete(`${this.endpoint}/resumes/${resumeId}`, this.getHttpOptions());
   }
 
   getAISuggestions(prompt: string, token: string): Observable<any> {
     const url = `${this.endpoint}/ai/suggestions`;
-    return this.http.post(url, { prompt }, { headers: this.getAuthHeaders() });
+    return this.http.post(url, { prompt }, this.getHttpOptions());
   }
 }
