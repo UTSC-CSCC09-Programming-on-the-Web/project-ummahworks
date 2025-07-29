@@ -121,7 +121,8 @@
       <section
         *ngIf="
           uploadedFile &&
-          uploadedFile.type === 'application/pdf' &&
+          uploadedFile.type ===
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' &&
           !uploadProgress
         "
         class="edit-resume-section"
@@ -129,7 +130,38 @@
         <h2 class="edit-resume-title">Edit Resume</h2>
         <div class="edit-resume-wrapper">
           <div class="edit-resume-viewer">
-            <iframe [src]="resumeUrl" class="edit-resume-iframe"></iframe>
+            <div class="markdown-content" *ngIf="currentResumeMarkdown">
+              <h3>Resume Content</h3>
+              <div
+                class="rendered-content"
+                [innerHTML]="currentResumeHtml"
+              ></div>
+
+              <!-- Debug section - remove this after fixing -->
+              <details
+                style="
+                  margin-top: 20px;
+                  padding: 10px;
+                  background: #f7fafc;
+                  border: 1px solid #e2e8f0;
+                  border-radius: 5px;
+                "
+              >
+                <summary style="cursor: pointer; font-weight: bold">
+                  Debug: Raw Markdown Content
+                </summary>
+                <pre
+                  style="white-space: pre-wrap; font-size: 12px; color: #666"
+                  >{{ currentResumeMarkdown }}</pre
+                >
+              </details>
+            </div>
+            <div class="no-content" *ngIf="!currentResumeMarkdown">
+              <p>
+                No content available. Please upload a DOCX file to see the
+                converted content.
+              </p>
+            </div>
           </div>
           <div class="edit-resume-interaction-panel">
             <div class="edit-suggestions-area">
@@ -197,7 +229,7 @@
                 <h4 class="resume-name">{{ resume.originalName }}</h4>
                 <p class="resume-details">
                   {{ resume.fileSize | number }} bytes •
-                  {{ resume.createdAt | date: "short" }}
+                  {{ resume.createdAt | date : "short" }}
                 </p>
               </div>
               <div class="resume-actions">

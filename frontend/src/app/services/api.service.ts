@@ -30,7 +30,7 @@ export class ApiService {
     return this.http.post(
       `${this.endpoint}/auth/token`,
       { idToken },
-      this.getHttpOptions(),
+      this.getHttpOptions()
     );
   }
 
@@ -46,7 +46,7 @@ export class ApiService {
     return this.http.post(
       `${this.endpoint}/auth/logout`,
       {},
-      this.getHttpOptions(),
+      this.getHttpOptions()
     );
   }
 
@@ -54,7 +54,7 @@ export class ApiService {
     return this.http.post(
       `${this.endpoint}/auth/logout-all`,
       {},
-      this.getHttpOptions(),
+      this.getHttpOptions()
     );
   }
 
@@ -62,14 +62,14 @@ export class ApiService {
     return this.http.post(
       `${this.endpoint}/subscription/create-checkout`,
       {},
-      this.getHttpOptions(),
+      this.getHttpOptions()
     );
   }
   syncSubscription(): Observable<any> {
     return this.http.post(
       `${this.endpoint}/test/sync-subscription`,
       {},
-      this.getHttpOptions(),
+      this.getHttpOptions()
     );
   }
 
@@ -86,6 +86,13 @@ export class ApiService {
   // Get uploaded file info (just returns file metadata)
   getUploadedResumes(): Observable<any> {
     return this.http.get(`${this.endpoint}/resumes`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  // Get markdown content for a specific resume
+  getResumeMarkdown(resumeId: number): Observable<any> {
+    return this.http.get(`${this.endpoint}/resumes/${resumeId}/markdown`, {
       headers: this.getAuthHeaders(),
     });
   }
