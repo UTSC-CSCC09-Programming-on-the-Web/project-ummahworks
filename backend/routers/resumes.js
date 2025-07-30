@@ -6,6 +6,8 @@ const { authenticateToken } = require("../middleware/auth");
 const { Resume } = require("../models/Resume");
 const mammoth = require("mammoth");
 const TurndownService = require("turndown");
+const TaskQueue = require("../services/taskQueue");
+const DocumentGenerator = require("../services/documentGenerator");
 
 const router = express.Router();
 
@@ -96,12 +98,6 @@ router.post(
           ],
         });
         htmlContent = result.value;
-
-        if (result.messages.length > 0) {
-          console.log("Mammoth conversion warnings:", result.messages);
-        }
-
-        console.log("Converted HTML:", htmlContent);
       } catch (conversionError) {
         console.error("Error converting DOCX to HTML:", conversionError);
         await fs.unlink(req.file.path);
@@ -219,8 +215,6 @@ router.post(
           .replace(/\n\s*\n\s*\n/g, "\n\n")
           .replace(/\n\s*\n/g, "\n\n")
           .trim();
-
-        console.log("Converted markdown:", markdownContent);
       } catch (turndownError) {
         console.error("Error converting HTML to Markdown:", turndownError);
         await fs.unlink(req.file.path);
@@ -331,16 +325,120 @@ router.get("/:id/updated", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Resume not found" });
     }
 
-    res.json({ 
+    res.json({
       updatedContent: resume.updatedContent,
       jobDescription: resume.jobDescription,
       originalContent: resume.content,
-      suggestions: resume.suggestions
+      suggestions: resume.suggestions,
     });
   } catch (error) {
     console.error("Error fetching updated resume:", error);
     res.status(500).json({ error: "Failed to fetch updated resume" });
   }
 });
+
+// Download resume as DOCX
+router.get("/:id/download/docx", authenticateToken, async (req, res) => {
+  try {
+    const resume = await Resume.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: "Resume not found" });
+    }
+
+    const content = resume.updatedContent || resume.content;
+    const baseFilename = resume.originalName.replace(".docx", "");
+
+    const documentGenerator = new DocumentGenerator();
+    const filePath = await documentGenerator.generateDOCX(
+      content,
+      `${baseFilename}.docx`
+    );
+
+    res.download(filePath, `${baseFilename}.docx`, async (err) => {
+      if (err) {
+        console.error("Download error:", err);
+      }
+      // Clean up the generated file
+      try {
+        await fs.unlink(filePath);
+      } catch (cleanupError) {
+        console.error("Error cleaning up file:", cleanupError);
+      }
+    });
+  } catch (error) {
+    console.error("Error generating DOCX:", error);
+    res.status(500).json({ error: "Failed to generate DOCX" });
+  }
+});
+
+// Send resume via email
+router.post("/:id/email", authenticateToken, async (req, res) => {
+  try {
+    const { userEmail, format } = req.body;
+
+    if (!userEmail) {
+      return res.status(400).json({ error: "Email address is required" });
+    }
+
+    // Check if SendGrid API key is configured
+    if (!process.env.SENDGRID_API_KEY) {
+      return res.status(500).json({
+        error: "Email service not configured. Please contact administrator.",
+      });
+    }
+
+    const resume = await Resume.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: "Resume not found" });
+    }
+
+    // Initialize task queue and add email task
+    const taskQueue = new TaskQueue();
+
+    // Check if Redis is available
+    const redisAvailable = await taskQueue.checkRedisConnection();
+    if (!redisAvailable) {
+      return res.status(500).json({
+        error: "Task queue service unavailable. Please try again later.",
+      });
+    }
+
+    const jobId = await taskQueue.addEmailTask(resume.id, userEmail, format);
+
+    res.json({
+      message: "Email task queued successfully",
+      jobId,
+      status: "queued",
+    });
+  } catch (error) {
+    console.error("Error queuing email task:", error);
+    res.status(500).json({ error: "Failed to queue email task" });
+  }
+});
+
+// Get job status
+router.get(
+  "/job/:queueName/:jobId/status",
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { queueName, jobId } = req.params;
+
+      const taskQueue = new TaskQueue();
+      const status = await taskQueue.getJobStatus(queueName, jobId);
+
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting job status:", error);
+      res.status(500).json({ error: "Failed to get job status" });
+    }
+  }
+);
 
 module.exports = router;

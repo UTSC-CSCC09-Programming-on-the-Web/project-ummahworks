@@ -1,9 +1,41 @@
 .payment-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 80vh;
   padding: 20px;
+  position: relative;
+}
+
+.payment-header {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.logout-btn {
+  background: linear-gradient(135deg, #e53e3e, #c53030);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.2);
+}
+
+.logout-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.2);
 }
 
 .payment-box {
@@ -18,7 +50,10 @@
 
 .payment-box h1 {
   font-size: 2rem;
-  color: #1877f2;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 0.5rem;
 }
 
@@ -28,15 +63,22 @@
 }
 
 .pricing-card {
-  border: 2px solid #e3f2fd;
+  border: 2px solid rgba(102, 126, 234, 0.2);
   border-radius: 10px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.05) 0%,
+    rgba(118, 75, 162, 0.05) 100%
+  );
 }
 
 .pricing-card h2 {
-  color: #1877f2;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 1rem;
   font-size: 1.5rem;
 }
@@ -44,7 +86,10 @@
 .price {
   font-size: 2.5rem;
   font-weight: bold;
-  color: #1877f2;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 1rem;
 }
 
@@ -65,7 +110,7 @@
 }
 
 .subscribe-btn {
-  background: linear-gradient(135deg, #1877f2 0%, #166fe5 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -80,7 +125,7 @@
 
 .subscribe-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(24, 119, 242, 0.4);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .subscribe-btn:disabled {

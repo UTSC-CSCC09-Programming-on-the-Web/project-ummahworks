@@ -14,10 +14,7 @@ export class PaymentComponent implements OnInit {
   loading = false;
   errorMessage = "";
 
-  constructor(
-    private api: ApiService,
-    private router: Router,
-  ) {}
+  constructor(private api: ApiService, private router: Router) {}
 
   ngOnInit(): void {
     this.api.getCurrentUser().subscribe({
@@ -50,5 +47,22 @@ export class PaymentComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  logout(): void {
+    this.api.logout().subscribe({
+      next: () => {
+        this.clearAuthData();
+      },
+      error: () => {
+        this.clearAuthData();
+      },
+    });
+  }
+
+  private clearAuthData(): void {
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    this.router.navigate(["/login"]);
   }
 }

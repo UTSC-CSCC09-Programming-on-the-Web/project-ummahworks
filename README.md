@@ -9,7 +9,8 @@
 
 ## Project Overview
 
-TailorMe is a smart resume tailoring platform designed to help job seekers productively create tailored applications.
+TailorMe (publicly accessible at [https://ummahworks.danishmohammed.ca](https://ummahworks.danishmohammed.ca))
+is a smart resume tailoring platform designed to help job seekers productively create tailored applications.
 
 Users can upload a master resume, and then paste in a job description. The AI analyzes the job posting and creates a customized resume that includes relevant keywords, experience, and qualifications. Users can re-prompt to suggest further edits, or manually edit the resume themselves. Then, they can export the final resume as PDFs.
 

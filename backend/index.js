@@ -120,15 +120,20 @@ const connectWithRetry = async (maxRetries = 10, delay = 2000) => {
   for (let i = 0; i < maxRetries; i++) {
     try {
       await sequelize.authenticate();
-      console.log("Database connection established successfully.");
+
       return;
     } catch (error) {
-      console.error(`Database connection attempt ${i + 1} failed:`, error.message);
+      console.error(
+        `Database connection attempt ${i + 1} failed:`,
+        error.message
+      );
       if (i < maxRetries - 1) {
-        console.log(`Retrying in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
-        console.error("Unable to connect to the database after all retries:", error);
+        console.error(
+          "Unable to connect to the database after all retries:",
+          error
+        );
         process.exit(1);
       }
     }
@@ -167,16 +172,16 @@ app.post("/api/ai/suggestions", authenticateToken, async (req, res) => {
     }
 
     if (!resume || !resume.content) {
-      return res.status(400).json({ 
-        error: "No resume found. Please upload a resume first." 
+      return res.status(400).json({
+        error: "No resume found. Please upload a resume first.",
       });
     }
 
     const isFirstPrompt = !resume.jobDescription;
-    
+
     let resumeContent = resume.content;
     let jobDescription = prompt;
-    
+
     if (!isFirstPrompt) {
       resumeContent = resume.updatedContent || resume.content;
       jobDescription = resume.jobDescription;
@@ -190,10 +195,14 @@ ${resumeContent}
 JOB DESCRIPTION/REQUIREMENTS:
 ${jobDescription}
 
-${!isFirstPrompt ? `ADDITIONAL REFINEMENT REQUEST:
+${
+  !isFirstPrompt
+    ? `ADDITIONAL REFINEMENT REQUEST:
 ${prompt}
 
-Note: Please consider the original job description above and make changes to the resume.` : ''}
+Note: Please consider the original job description above and make changes to the resume.`
+    : ""
+}
 
 Your task is to:
 1. Analyze the resume referencing the job description
@@ -285,99 +294,81 @@ IMPORTANT: You MUST include both the updated resume AND the "SPLIT" keyword foll
     const response = await openai.completions.create({
       model: "gpt-4o-mini",
       prompt: enhancedPrompt,
-      max_tokens: 16384, 
-      temperature: 0.7, 
+      max_tokens: 16384,
+      temperature: 0.7,
     });
 
     const responseText = response.choices[0].text.trim();
-    
-    console.log("OpenAI Response:", responseText);
-    console.log("Response length:", responseText.length);
-    console.log("Contains 'SPLIT':", responseText.includes("SPLIT"));
-    console.log("Number of SPLIT occurrences:", (responseText.match(/SPLIT/g) || []).length);
-    
-    
-    // Parse the response using the SPLIT delimiter
-    const parts = responseText.split('SPLIT');
-    
+
+    const parts = responseText.split("SPLIT");
+
     let updatedResume = "";
     let suggestions = "";
-    
+
     if (parts.length >= 2) {
-      // Everything before SPLIT is the updated resume
       updatedResume = parts[0].trim();
-      // Everything after SPLIT is the summary of changes
       suggestions = parts[1].trim();
-      
-      console.log("Successfully parsed with SPLIT delimiter");
-      console.log("Updated resume length:", updatedResume.length);
-      console.log("Suggestions length:", suggestions.length);
     } else {
-      // If SPLIT is not found, treat the entire response as suggestions
-      console.log("SPLIT delimiter not found, treating entire response as suggestions");
       suggestions = responseText.trim();
       updatedResume = "";
     }
-    
-    // Clean up the updated resume to remove any unwanted text
+
     if (updatedResume) {
       let cleanedUpdatedResume = updatedResume;
-      
-      // Remove common unwanted introductory text
+
       cleanedUpdatedResume = cleanedUpdatedResume
-        .replace(/^.*?(?=^#\s+[A-Z]|^##\s+[A-Z]|^\*\*[A-Z])/ms, '') // Remove everything before first header
-        .replace(/^Do NOT forget this\.?\s*$/gm, '')
-        .replace(/^Now, here is the improved resume for .*?:?\s*$/gm, '')
-        .replace(/^Here is the improved resume:?\s*$/gm, '')
-        .replace(/^Here is the updated resume:?\s*$/gm, '')
-        .replace(/^Here is your improved resume:?\s*$/gm, '')
-        .replace(/^Below is the improved resume:?\s*$/gm, '')
-        .replace(/^The improved resume is as follows:?\s*$/gm, '')
-        .replace(/^---\s*$/gm, '') // Remove standalone dashes
-        .replace(/^\s*---\s*$/gm, '') // Remove standalone dashes with spaces
+        .replace(/^.*?(?=^#\s+[A-Z]|^##\s+[A-Z]|^\*\*[A-Z])/ms, "") // Remove everything before first header
+        .replace(/^Do NOT forget this\.?\s*$/gm, "")
+        .replace(/^Now, here is the improved resume for .*?:?\s*$/gm, "")
+        .replace(/^Here is the improved resume:?\s*$/gm, "")
+        .replace(/^Here is the updated resume:?\s*$/gm, "")
+        .replace(/^Here is your improved resume:?\s*$/gm, "")
+        .replace(/^Below is the improved resume:?\s*$/gm, "")
+        .replace(/^The improved resume is as follows:?\s*$/gm, "")
+        .replace(/^---\s*$/gm, "") // Remove standalone dashes
+        .replace(/^\s*---\s*$/gm, "") // Remove standalone dashes with spaces
         .trim();
-      
-      // Remove job description lines if they were included
-      const jobDescriptionLines = jobDescription.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-      jobDescriptionLines.forEach(line => {
-        const escapedLine = line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`^\\s*${escapedLine}\\s*$`, 'gm');
-        cleanedUpdatedResume = cleanedUpdatedResume.replace(regex, '');
+
+      const jobDescriptionLines = jobDescription
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      jobDescriptionLines.forEach((line) => {
+        const escapedLine = line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`^\\s*${escapedLine}\\s*$`, "gm");
+        cleanedUpdatedResume = cleanedUpdatedResume.replace(regex, "");
       });
-      
+
       cleanedUpdatedResume = cleanedUpdatedResume
-        .replace(/^JOB DESCRIPTION\/REQUIREMENTS:\s*$/gm, '')
-        .replace(/^Job Description:\s*$/gm, '')
-        .replace(/^Requirements:\s*$/gm, '')
-        .replace(/^Job Requirements:\s*$/gm, '')
+        .replace(/^JOB DESCRIPTION\/REQUIREMENTS:\s*$/gm, "")
+        .replace(/^Job Description:\s*$/gm, "")
+        .replace(/^Requirements:\s*$/gm, "")
+        .replace(/^Job Requirements:\s*$/gm, "")
         .trim();
-      
+
       updatedResume = cleanedUpdatedResume;
-      console.log("Cleaned updated resume length:", updatedResume.length);
     }
 
-    // Save the updated resume, suggestions, and job description to the database
     const updateData = {
       updatedContent: updatedResume,
       suggestions: suggestions,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
-    // Only save job description on first prompt
     if (isFirstPrompt) {
       updateData.jobDescription = prompt;
     }
 
     await Resume.update(updateData, {
-      where: { id: resume.id }
+      where: { id: resume.id },
     });
 
-    res.json({ 
+    res.json({
       suggestions: suggestions,
       updatedResume: updatedResume,
       originalResume: resume.content,
       resumeId: resume.id,
-      isFirstPrompt: isFirstPrompt
+      isFirstPrompt: isFirstPrompt,
     });
   } catch (error) {
     console.error("OpenAI API error:", error);
@@ -684,22 +675,18 @@ app.use("/api/resumes", resumesRouter);
 app.use("/uploads", express.static(uploadsDir));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Backend listening on port ${PORT}`);
-});
+app.listen(PORT, () => {});
 
 app.use("*", (req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
 process.on("SIGINT", async () => {
-  console.log("Shutting down gracefully...");
   await sequelize.close();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
-  console.log("Shutting down gracefully...");
   await sequelize.close();
   process.exit(0);
 });

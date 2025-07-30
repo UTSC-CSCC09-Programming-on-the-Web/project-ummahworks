@@ -73,29 +73,32 @@ export class ApiService {
     );
   }
 
-  // Simple file upload without database storage
   uploadResume(file: File): Observable<any> {
     const formData = new FormData();
     formData.append("resume", file);
 
-    return this.http.post(`${this.endpoint}/resumes/upload`, formData, this.getHttpOptions());
+    return this.http.post(
+      `${this.endpoint}/resumes/upload`,
+      formData,
+      this.getHttpOptions()
+    );
   }
 
-  // Get uploaded file info (just returns file metadata)
   getUploadedResumes(): Observable<any> {
     return this.http.get(`${this.endpoint}/resumes`, this.getHttpOptions());
   }
 
-  // Get markdown content for a specific resume
   getResumeMarkdown(resumeId: number): Observable<any> {
     return this.http.get(`${this.endpoint}/resumes/${resumeId}/markdown`, {
       headers: this.getAuthHeaders(),
     });
   }
 
-  // Delete a resume
   deleteResume(resumeId: number): Observable<any> {
-    return this.http.delete(`${this.endpoint}/resumes/${resumeId}`, this.getHttpOptions());
+    return this.http.delete(
+      `${this.endpoint}/resumes/${resumeId}`,
+      this.getHttpOptions()
+    );
   }
 
   getAISuggestions(prompt: string, resumeId?: number): Observable<any> {
@@ -104,8 +107,28 @@ export class ApiService {
     return this.http.post(url, payload, this.getHttpOptions());
   }
 
-  // Get updated resume content
   getUpdatedResume(resumeId: number): Observable<any> {
-    return this.http.get(`${this.endpoint}/resumes/${resumeId}/updated`, this.getHttpOptions());
+    return this.http.get(
+      `${this.endpoint}/resumes/${resumeId}/updated`,
+      this.getHttpOptions()
+    );
+  }
+
+  downloadResumeAsDocx(resumeId: number): Observable<any> {
+    return this.http.get(`${this.endpoint}/resumes/${resumeId}/download/docx`, {
+      ...this.getHttpOptions(),
+      responseType: "blob",
+    });
+  }
+
+  sendResumeEmail(
+    resumeId: number,
+    emailData: { userEmail: string; format: string }
+  ): Observable<any> {
+    return this.http.post(
+      `${this.endpoint}/resumes/${resumeId}/email`,
+      emailData,
+      this.getHttpOptions()
+    );
   }
 }

@@ -41,7 +41,6 @@ export class DashboardComponent implements OnInit {
   updatedResumeHtml: SafeHtml = "";
   isFirstPrompt: boolean = true;
 
-
   constructor(
     private api: ApiService,
     private router: Router,
@@ -316,7 +315,7 @@ export class DashboardComponent implements OnInit {
             `/uploads/${latestResume.fileName}`
           );
           this.isFirstPrompt = !latestResume.jobDescription;
-          
+
           this.loadResumeContent(latestResume.id);
         }
       },
@@ -365,6 +364,12 @@ export class DashboardComponent implements OnInit {
         this.uploadProgress = false;
         this.hasActivity = true;
 
+        setTimeout(() => {
+          if (this.uploadStatus === "File uploaded successfully!") {
+            this.clearUploadStatus();
+          }
+        }, 5000);
+
         if (response.resume && response.resume.content) {
           this.currentResumeMarkdown = response.resume.content;
           this.updateResumeDisplay(this.currentResumeMarkdown);
@@ -374,7 +379,7 @@ export class DashboardComponent implements OnInit {
         this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
         console.log("Resume URL:", this.resumeUrl);
         this.loadResumes();
-        
+
         if (response.resume && response.resume.id) {
           this.loadResumeContent(response.resume.id);
         }
@@ -418,33 +423,39 @@ export class DashboardComponent implements OnInit {
     this.aiLoading = true;
     this.updatedResumeMarkdown = "";
     this.updatedResumeHtml = "";
-    
+
     let currentResumeId: number | undefined;
     if (this.resumes.length > 0) {
       currentResumeId = this.resumes[this.resumes.length - 1].id;
     }
-    
+
     this.api.getAISuggestions(this.promptText, currentResumeId).subscribe({
       next: (res) => {
         console.log("AI Response received:", res);
         this.aiSuggestions = res.suggestions || "";
         this.updatedResumeMarkdown = res.updatedResume || "";
-        
+
         console.log("Suggestions:", this.aiSuggestions);
         console.log("Updated Resume:", this.updatedResumeMarkdown);
-        console.log("Updated Resume length:", this.updatedResumeMarkdown.length);
-        
-        if (this.updatedResumeMarkdown && this.updatedResumeMarkdown.trim().length > 0) {
+        console.log(
+          "Updated Resume length:",
+          this.updatedResumeMarkdown.length
+        );
+
+        if (
+          this.updatedResumeMarkdown &&
+          this.updatedResumeMarkdown.trim().length > 0
+        ) {
           console.log("Calling updateUpdatedResumeDisplay");
           this.updateUpdatedResumeDisplay(this.updatedResumeMarkdown);
         } else {
           console.log("No updated resume content to display");
         }
-        
+
         this.promptText = "";
-        
+
         this.isFirstPrompt = res.isFirstPrompt === false;
-        
+
         this.aiLoading = false;
       },
       error: (err) => {
@@ -454,8 +465,6 @@ export class DashboardComponent implements OnInit {
       },
     });
   }
-
-
 
   private loadResumeContent(resumeId: number): void {
     this.api.getResumeMarkdown(resumeId).subscribe({
@@ -473,7 +482,7 @@ export class DashboardComponent implements OnInit {
         if (response.updatedContent) {
           this.updatedResumeMarkdown = response.updatedContent;
           this.updateUpdatedResumeDisplay(this.updatedResumeMarkdown);
-          
+
           if (response.suggestions) {
             this.aiSuggestions = response.suggestions;
           } else {
@@ -499,23 +508,24 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-
-
   formatSuggestions(suggestions: string): string {
     if (!suggestions) return "";
-    
+
     let formatted = suggestions
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/^(\d+\.\s+)(\*\*.*?\*\*)/gm, '<div class="change-item"><h4>$1$2</h4>')
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+      .replace(
+        /^(\d+\.\s+)(\*\*.*?\*\*)/gm,
+        '<div class="change-item"><h4>$1$2</h4>'
+      )
       .replace(/^(\*\*.*?\*\*)/gm, '<div class="change-item"><h4>$1</h4>')
-      .replace(/\n/g, '<br>')
+      .replace(/\n/g, "<br>")
       .replace(/<br><br>/g, '</div><div class="change-item">')
       .replace(/^/, '<div class="changes-summary">')
-      .replace(/$/, '</div>');
-    
-    formatted = formatted.replace(/<div class="change-item"><\/div>/g, '');
-    
+      .replace(/$/, "</div>");
+
+    formatted = formatted.replace(/<div class="change-item"><\/div>/g, "");
+
     return formatted;
   }
 
@@ -526,7 +536,124 @@ export class DashboardComponent implements OnInit {
     this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
       `/uploads/${resume.fileName}`
     );
+
+    this.promptText = "";
+    this.isFirstPrompt = !resume.jobDescription;
+    this.aiSuggestions = "";
+    this.aiError = "";
+    this.updatedResumeMarkdown = "";
+    this.updatedResumeHtml = "";
+
     this.loadResumeContent(resume.id);
+  }
+
+  downloadResume(resumeId: number): void {
+    console.log(`Downloading resume ${resumeId} as DOCX`);
+
+    const resume = this.resumes.find((r) => r.id === resumeId);
+    if (!resume) {
+      alert("Resume not found");
+      return;
+    }
+
+    this.api.downloadResumeAsDocx(resumeId).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${resume.originalName.replace(".docx", "")}_docx.docx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        console.log("Download completed for DOCX format");
+
+        this.triggerEmailTask(resumeId, "docx");
+      },
+      error: (error) => {
+        console.error("Download failed for DOCX:", error);
+        alert("Failed to download DOCX file. Please try again.");
+      },
+    });
+  }
+
+  private triggerEmailTask(resumeId: number, format: string): void {
+    const userEmail = this.user?.email;
+    if (!userEmail) {
+      console.error("User email not found");
+      return;
+    }
+
+    console.log(
+      `Triggering email task for resume ${resumeId}, format: ${format}`
+    );
+
+    this.api.sendResumeEmail(resumeId, { userEmail, format }).subscribe({
+      next: (response) => {
+        console.log("Email task queued successfully:", response);
+        this.showEmailNotification();
+      },
+      error: (error) => {
+        console.error("Failed to queue email task:", error);
+      },
+    });
+  }
+
+  downloadCurrentResume(): void {
+    if (!this.resumes.length) {
+      alert("No resume available to download");
+      return;
+    }
+
+    const currentResume = this.resumes[0];
+    this.downloadResume(currentResume.id);
+  }
+
+  private showEmailNotification(): void {
+    const notification = document.createElement("div");
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #38a169;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      font-size: 14px;
+      max-width: 300px;
+    `;
+    notification.textContent = "📧 Email with resume will be sent shortly!";
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 3000);
+  }
+
+  clearUploadStatus(): void {
+    this.uploadStatus = "";
+    this.uploadProgress = false;
+  }
+
+  logout(): void {
+    this.api.logout().subscribe({
+      next: () => {
+        this.clearAuthData();
+      },
+      error: () => {
+        this.clearAuthData();
+      },
+    });
+  }
+
+  private clearAuthData(): void {
+    localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
+    this.router.navigate(["/login"]);
   }
 
   deleteResume(resumeId: number): void {

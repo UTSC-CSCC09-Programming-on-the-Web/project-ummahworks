@@ -1,4 +1,23 @@
 <div class="dashboard-container">
+  <div
+    *ngIf="uploadStatus"
+    class="toast-notification"
+    [ngClass]="{
+      'toast-success': uploadStatus.includes('successfully'),
+      'toast-error':
+        uploadStatus.includes('failed') ||
+        uploadStatus.includes('Invalid') ||
+        uploadStatus.includes('too large'),
+      'toast-progress': uploadProgress
+    }"
+  >
+    <div class="toast-content">
+      <div *ngIf="uploadProgress" class="toast-spinner"></div>
+      <span class="toast-message">{{ uploadStatus }}</span>
+      <button class="toast-close" (click)="clearUploadStatus()">×</button>
+    </div>
+  </div>
+
   <div class="dashboard-content">
     <div *ngIf="loading" class="loading-spinner">
       <div class="spinner"></div>
@@ -6,7 +25,6 @@
     </div>
 
     <div *ngIf="!loading" class="dashboard-layout">
-      <!-- Header Section -->
       <section class="hero-section">
         <div class="hero-content">
           <h1 class="hero-title">Welcome to TailorMe</h1>
@@ -30,94 +48,10 @@
             <span class="user-name">{{ user.name || user.email }}</span>
             <span class="user-email">{{ user.email }}</span>
           </div>
+          <button class="logout-btn" (click)="logout()">Logout</button>
         </div>
       </section>
 
-      <!-- Quick Actions -->
-      <section class="quick-actions-section">
-        <h2 class="section-title">Quick Actions</h2>
-
-        <!-- Upload Status -->
-        <div
-          *ngIf="uploadStatus"
-          class="upload-status"
-          [ngClass]="{
-            'upload-success': uploadStatus.includes('successfully'),
-            'upload-error':
-              uploadStatus.includes('failed') ||
-              uploadStatus.includes('Invalid') ||
-              uploadStatus.includes('too large'),
-            'upload-progress': uploadProgress,
-          }"
-        >
-          <div *ngIf="uploadProgress" class="upload-spinner"></div>
-          {{ uploadStatus }}
-        </div>
-
-        <!-- Quick Action Cards -->
-        <div class="action-cards">
-          <div class="action-card primary-card" (click)="onUploadResume()">
-            <div class="card-icon">
-              <svg
-                class="icon-upload"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7,10 12,15 17,10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-            </div>
-            <h3 class="card-title">Upload Resume</h3>
-            <p class="card-description">
-              Upload your master resume to get started
-            </p>
-            <div class="card-action">Get Started →</div>
-          </div>
-          <div class="action-card secondary-card" (click)="onCreateNew()">
-            <div class="card-icon">
-              <svg
-                class="icon-create"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path
-                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                ></path>
-              </svg>
-            </div>
-            <h3 class="card-title">Create Tailored Resume</h3>
-            <p class="card-description">
-              Generate a custom resume for specific job opportunities
-            </p>
-            <div class="card-action">Create Now →</div>
-          </div>
-          <div class="action-card tertiary-card" (click)="onViewTemplates()">
-            <div class="card-icon">
-              <svg
-                class="icon-template"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="9" x2="15" y2="9"></line>
-                <line x1="9" y1="12" x2="15" y2="12"></line>
-                <line x1="9" y1="15" x2="15" y2="15"></line>
-              </svg>
-            </div>
-            <h3 class="card-title">Browse Templates</h3>
-            <p class="card-description">
-              Explore professional resume templates
-            </p>
-            <div class="card-action">View All →</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Edit Resume Section -->
       <section
         *ngIf="
           uploadedFile &&
@@ -128,30 +62,36 @@
         class="edit-resume-section"
       >
         <div class="edit-resume-header">
-          <h2 class="edit-resume-title">Edit Resume</h2>
+          <h2 class="edit-resume-title">Tailor your Resume</h2>
         </div>
         <div class="edit-resume-wrapper">
-          <!-- Four Section Layout -->
           <div class="resume-grid-container">
-            <!-- Section 1: Original Resume -->
             <div class="resume-section original-resume">
               <h3>Original Resume</h3>
               <div class="resume-paper-container">
                 <div class="resume-paper" *ngIf="currentResumeMarkdown">
-                  <div class="resume-content" [innerHTML]="currentResumeHtml"></div>
+                  <div
+                    class="resume-content"
+                    [innerHTML]="currentResumeHtml"
+                  ></div>
                 </div>
                 <div class="no-content" *ngIf="!currentResumeMarkdown">
-                  <p>No content available. Please upload a DOCX file to see the converted content.</p>
+                  <p>
+                    No content available. Please upload a DOCX file to see the
+                    converted content.
+                  </p>
                 </div>
               </div>
             </div>
 
-            <!-- Section 2: Updated Resume -->
             <div class="resume-section updated-resume">
               <h3>Updated Resume</h3>
               <div class="resume-paper-container">
                 <div class="resume-paper" *ngIf="updatedResumeMarkdown">
-                  <div class="resume-content updated-resume-content" [innerHTML]="updatedResumeHtml"></div>
+                  <div
+                    class="resume-content updated-resume-content"
+                    [innerHTML]="updatedResumeHtml"
+                  ></div>
                 </div>
                 <div class="no-content" *ngIf="!updatedResumeMarkdown">
                   <p>Get AI suggestions to see the updated resume here.</p>
@@ -159,7 +99,6 @@
               </div>
             </div>
 
-            <!-- Section 3: Summary of Changes -->
             <div class="resume-section ai-suggestions">
               <h3>Summary of Changes</h3>
               <div class="suggestions-container">
@@ -174,29 +113,44 @@
                   class="suggestions-result"
                   [innerHTML]="formatSuggestions(aiSuggestions)"
                 ></div>
-
               </div>
             </div>
 
-            <!-- Section 4: Prompt Area -->
             <div class="resume-section prompt-area">
               <h3>Job Description & Analysis</h3>
               <div class="prompt-container">
                 <div class="prompt-input-area">
-                  <label for="prompt-input">Job Description/Requirements:</label>
+                  <label for="prompt-input"
+                    >Job Description/Requirements:</label
+                  >
                   <textarea
                     id="prompt-input"
                     [(ngModel)]="promptText"
                     rows="6"
-                    [placeholder]="isFirstPrompt ? 'Paste your job description here' : 'Ask for specific refinements'"
+                    [placeholder]="
+                      isFirstPrompt
+                        ? 'Paste your job description here'
+                        : 'Ask for specific refinements'
+                    "
                   ></textarea>
-                  <button
-                    (click)="getAISuggestions()"
-                    [disabled]="aiLoading"
-                    class="send-prompt-btn"
-                  >
-                    {{ isFirstPrompt ? 'Get AI Suggestions' : 'Refine Resume' }}
-                  </button>
+                  <div class="prompt-actions">
+                    <button
+                      (click)="getAISuggestions()"
+                      [disabled]="aiLoading"
+                      class="send-prompt-btn"
+                    >
+                      {{
+                        isFirstPrompt ? "Get AI Suggestions" : "Refine Resume"
+                      }}
+                    </button>
+                    <button
+                      (click)="downloadCurrentResume()"
+                      class="download-resume-btn"
+                      [disabled]="!currentResumeMarkdown"
+                    >
+                      Download as DOCX
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -204,12 +158,11 @@
         </div>
       </section>
 
-      <!-- Uploaded Resumes -->
       <section class="resumes-section">
         <div class="section-header">
           <h2 class="section-title">Your Resumes</h2>
-          <button class="view-all-btn" (click)="onViewAllActivity()">
-            View All
+          <button class="view-all-btn" (click)="onUploadResume()">
+            Upload Resume
           </button>
         </div>
         <div class="resumes-content">
@@ -226,9 +179,6 @@
             <p class="empty-description">
               Start by uploading your resume to get started
             </p>
-            <button class="empty-action-btn" (click)="onUploadResume()">
-              Upload Resume
-            </button>
           </div>
           <div *ngIf="resumes.length > 0" class="resumes-grid">
             <div *ngFor="let resume of resumes" class="resume-card">
@@ -244,6 +194,12 @@
                   View
                 </button>
                 <button
+                  class="resume-action-btn download"
+                  (click)="downloadResume(resume.id)"
+                >
+                  DOCX
+                </button>
+                <button
                   class="resume-action-btn delete"
                   (click)="deleteResume(resume.id)"
                 >
@@ -251,58 +207,6 @@
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Recent Activity -->
-      <section class="activity-section">
-        <div class="section-header">
-          <h2 class="section-title">Recent Activity</h2>
-          <button class="view-all-btn" (click)="onViewAllActivity()">
-            View All
-          </button>
-        </div>
-        <div class="activity-content">
-          <div *ngIf="!hasActivity" class="empty-state">
-            <div class="empty-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                <line x1="15" y1="9" x2="15.01" y2="9"></line>
-              </svg>
-            </div>
-            <h3 class="empty-title">No recent activity</h3>
-            <p class="empty-description">
-              Start by uploading your resume or creating a new tailored version
-            </p>
-            <button class="empty-action-btn" (click)="onUploadResume()">
-              Upload Resume
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Stats Overview -->
-      <section class="stats-section">
-        <h2 class="section-title">Your Progress</h2>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number">{{ stats.resumesCreated }}</div>
-            <div class="stat-label">Resumes Created</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ stats.applicationsSubmitted }}</div>
-            <div class="stat-label">Applications Submitted</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ stats.interviewsScheduled }}</div>
-            <div class="stat-label">Interviews Scheduled</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ stats.successRate }}%</div>
-            <div class="stat-label">Success Rate</div>
           </div>
         </div>
       </section>

@@ -18,7 +18,10 @@
 
 .login-box h1 {
   font-size: 2.5rem;
-  color: #1877f2;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 0.5rem;
 }
 
