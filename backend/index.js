@@ -317,7 +317,7 @@ IMPORTANT: You MUST include both the updated resume AND the "SPLIT" keyword foll
       let cleanedUpdatedResume = updatedResume;
 
       cleanedUpdatedResume = cleanedUpdatedResume
-        .replace(/^.*?(?=^#\s+[A-Z]|^##\s+[A-Z]|^\*\*[A-Z])/ms, "") // Remove everything before first header
+        .replace(/^.*?(?=^#\s+[A-Z]|^##\s+[A-Z]|^\*\*[A-Z])/ms, "")
         .replace(/^Do NOT forget this\.?\s*$/gm, "")
         .replace(/^Now, here is the improved resume for .*?:?\s*$/gm, "")
         .replace(/^Here is the improved resume:?\s*$/gm, "")
@@ -325,8 +325,8 @@ IMPORTANT: You MUST include both the updated resume AND the "SPLIT" keyword foll
         .replace(/^Here is your improved resume:?\s*$/gm, "")
         .replace(/^Below is the improved resume:?\s*$/gm, "")
         .replace(/^The improved resume is as follows:?\s*$/gm, "")
-        .replace(/^---\s*$/gm, "") // Remove standalone dashes
-        .replace(/^\s*---\s*$/gm, "") // Remove standalone dashes with spaces
+        .replace(/^---\s*$/gm, "")
+        .replace(/^\s*---\s*$/gm, "")
         .trim();
 
       const jobDescriptionLines = jobDescription

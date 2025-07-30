@@ -6,7 +6,6 @@ const { User } = require("../models/users");
 
 class TaskQueue {
   constructor() {
-    // Initialize Bull queue with Redis
     this.emailQueue = new Queue("email-queue", {
       redis: {
         host: process.env.REDIS_HOST || "redis",
@@ -25,7 +24,6 @@ class TaskQueue {
 
     this.documentGenerator = new DocumentGenerator();
 
-    // Initialize email service with error handling
     try {
       this.emailService = new EmailService();
     } catch (error) {
@@ -36,7 +34,6 @@ class TaskQueue {
     this.setupQueueHandlers();
   }
 
-  // Check if Redis is available
   async checkRedisConnection() {
     try {
       await this.emailQueue.isReady();
@@ -49,7 +46,6 @@ class TaskQueue {
   }
 
   setupQueueHandlers() {
-    // Handle document generation tasks
     this.documentQueue.process("generate-documents", async (job) => {
       try {
         const { resumeId, format } = job.data;
@@ -84,7 +80,6 @@ class TaskQueue {
       }
     });
 
-    // Handle email sending tasks
     this.emailQueue.process("send-resume-email", async (job) => {
       try {
         const { resumeId, userEmail, format } = job.data;
@@ -99,7 +94,6 @@ class TaskQueue {
           throw new Error("User not found");
         }
 
-        // Generate document for email attachment
         const content = resume.updatedContent || resume.content;
         const baseFilename = resume.originalName.replace(".docx", "");
 
@@ -108,12 +102,10 @@ class TaskQueue {
           `${baseFilename}.docx`
         );
 
-        // Create email attachments
         const attachments = await this.emailService.createAttachments([
           documentPath,
         ]);
 
-        // Prepare email data
         const emailData = {
           jobDescription:
             resume.jobDescription || "No job description provided",
@@ -121,7 +113,6 @@ class TaskQueue {
           resumeContent: content,
         };
 
-        // Send email
         if (!this.emailService) {
           throw new Error(
             "Email service not available - SendGrid API key may not be configured"
@@ -134,7 +125,6 @@ class TaskQueue {
           attachments
         );
 
-        // Clean up generated file
         try {
           await require("fs").promises.unlink(documentPath);
         } catch (cleanupError) {
@@ -148,7 +138,6 @@ class TaskQueue {
       }
     });
 
-    // Error handling
     this.documentQueue.on("error", (error) => {
       console.error("Document queue error:", error);
     });
@@ -157,12 +146,10 @@ class TaskQueue {
       console.error("Email queue error:", error);
     });
 
-    // Job completion handling
     this.documentQueue.on("completed", (job, result) => {});
 
     this.emailQueue.on("completed", (job, result) => {});
 
-    // Job failure handling
     this.documentQueue.on("failed", (job, error) => {
       console.error(`Document generation failed for job ${job.id}:`, error);
     });
@@ -172,7 +159,6 @@ class TaskQueue {
     });
   }
 
-  // Add document generation task to queue
   async addDocumentGenerationTask(resumeId, format) {
     try {
       const job = await this.documentQueue.add(
@@ -197,7 +183,6 @@ class TaskQueue {
     }
   }
 
-  // Add email sending task to queue
   async addEmailTask(resumeId, userEmail, format) {
     try {
       const job = await this.emailQueue.add(
@@ -223,7 +208,6 @@ class TaskQueue {
     }
   }
 
-  // Get job status
   async getJobStatus(queueName, jobId) {
     try {
       const queue =
@@ -251,7 +235,6 @@ class TaskQueue {
     }
   }
 
-  // Get queue statistics
   async getQueueStats() {
     try {
       const [documentStats, emailStats] = await Promise.all([

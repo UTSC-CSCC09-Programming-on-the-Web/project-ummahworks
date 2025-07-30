@@ -14,7 +14,6 @@ class DocumentGenerator {
     this.uploadsDir = path.join(__dirname, "../uploads");
   }
 
-  // Convert markdown to DOCX structure
   markdownToDocxStructure(markdown) {
     if (!markdown) return [];
 
@@ -26,7 +25,6 @@ class DocumentGenerator {
 
       if (!line) continue;
 
-      // Headers
       if (line.startsWith("# ")) {
         children.push(
           new Paragraph({
@@ -53,7 +51,6 @@ class DocumentGenerator {
           })
         );
       } else if (line.startsWith("- ") || line.startsWith("* ")) {
-        // List items
         const text = line.substring(2);
         children.push(
           new Paragraph({
@@ -63,7 +60,6 @@ class DocumentGenerator {
           })
         );
       } else {
-        // Regular paragraph
         children.push(
           new Paragraph({
             text: line,
@@ -76,7 +72,6 @@ class DocumentGenerator {
     return children;
   }
 
-  // Generate DOCX from markdown content
   async generateDOCX(markdown, filename) {
     try {
       const children = this.markdownToDocxStructure(markdown);
@@ -102,7 +97,6 @@ class DocumentGenerator {
     }
   }
 
-  // Generate DOCX file
   async generateDocument(markdown, baseFilename) {
     const timestamp = Date.now();
     const docxFilename = `${baseFilename}_${timestamp}.docx`;

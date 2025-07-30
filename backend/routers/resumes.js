@@ -337,7 +337,6 @@ router.get("/:id/updated", authenticateToken, async (req, res) => {
   }
 });
 
-// Download resume as DOCX
 router.get("/:id/download/docx", authenticateToken, async (req, res) => {
   try {
     const resume = await Resume.findOne({
@@ -361,7 +360,6 @@ router.get("/:id/download/docx", authenticateToken, async (req, res) => {
       if (err) {
         console.error("Download error:", err);
       }
-      // Clean up the generated file
       try {
         await fs.unlink(filePath);
       } catch (cleanupError) {
@@ -374,7 +372,6 @@ router.get("/:id/download/docx", authenticateToken, async (req, res) => {
   }
 });
 
-// Send resume via email
 router.post("/:id/email", authenticateToken, async (req, res) => {
   try {
     const { userEmail, format } = req.body;
@@ -383,7 +380,6 @@ router.post("/:id/email", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: "Email address is required" });
     }
 
-    // Check if SendGrid API key is configured
     if (!process.env.SENDGRID_API_KEY) {
       return res.status(500).json({
         error: "Email service not configured. Please contact administrator.",
@@ -398,10 +394,8 @@ router.post("/:id/email", authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Resume not found" });
     }
 
-    // Initialize task queue and add email task
     const taskQueue = new TaskQueue();
 
-    // Check if Redis is available
     const redisAvailable = await taskQueue.checkRedisConnection();
     if (!redisAvailable) {
       return res.status(500).json({
@@ -422,7 +416,6 @@ router.post("/:id/email", authenticateToken, async (req, res) => {
   }
 });
 
-// Get job status
 router.get(
   "/job/:queueName/:jobId/status",
   authenticateToken,
