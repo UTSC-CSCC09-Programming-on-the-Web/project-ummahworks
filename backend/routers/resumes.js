@@ -8,8 +8,247 @@ const mammoth = require("mammoth");
 const TurndownService = require("turndown");
 const TaskQueue = require("../services/taskQueue");
 const DocumentGenerator = require("../services/documentGenerator");
+const OpenAI = require("openai");
 
 const router = express.Router();
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+router.post("/ai/suggestions", authenticateToken, async (req, res) => {
+  const { prompt, resumeId } = req.body;
+
+  console.log(
+    "AI suggestions request - resumeId:",
+    resumeId,
+    "prompt:",
+    prompt
+  );
+
+  if (!prompt) {
+    return res.status(400).json({ error: "Prompt is required" });
+  }
+
+  try {
+    let resume = null;
+    if (resumeId) {
+      resume = await Resume.findOne({
+        where: { id: resumeId, userId: req.user.id },
+      });
+    }
+
+    if (!resume) {
+      resume = await Resume.findOne({
+        where: { userId: req.user.id },
+        order: [["createdAt", "DESC"]],
+      });
+    }
+
+    if (!resume || !resume.content) {
+      return res.status(400).json({
+        error: "No resume found. Please upload a resume first.",
+      });
+    }
+
+    const isFirstPrompt = !resume.jobDescription;
+
+    let resumeContent = resume.content;
+    let jobDescription = prompt;
+
+    if (!isFirstPrompt) {
+      resumeContent = resume.updatedContent || resume.content;
+      jobDescription = resume.jobDescription;
+    }
+
+    const enhancedPrompt = `As a professional resume consultant, I need you to analyze and improve the following resume based on the job description provided in the prompt.
+
+RESUME CONTENT:
+${resumeContent}
+
+JOB DESCRIPTION/REQUIREMENTS:
+${jobDescription}
+
+${
+  !isFirstPrompt
+    ? `ADDITIONAL REFINEMENT REQUEST:
+${prompt}
+
+Note: Please consider the original job description above and make changes to the resume.`
+    : ""
+}
+
+Your task is to:
+1. Analyze the resume referencing the job description
+2. Make specific improvements to align the resume with the job requirements
+3. Return an updated version of the resume with the improvements applied
+4. Also Provide a summary of the changes made with a brief explanation of each change
+
+CRITICAL INSTRUCTIONS:
+- The updated resume should look like a normal resume, not include any analysis text
+
+Use the following guidelines to enhance the resume:
+
+Content Enhancements
+1. Add Relevant Keywords:
+   - Identify important keywords from the job description (e.g., skills, tools, certifications) and incorporate them into the resume.
+
+2. Highlight Missing Skills or Experiences:
+   - Compare the resume with the job description and suggest adding missing skills, certifications, or experiences.
+
+3. Tailor Achievements:
+   - Rewrite achievements to align with the job description, emphasizing relevant metrics (e.g., "Increased sales by 20% using [specific tool]").
+
+4. Improve Clarity:
+   - Simplify complex sentences and remove redundant information for better readability.
+
+---
+
+Structural Improvements
+1. Reorganize Sections:
+   - Adjust the order of sections (e.g., move "Skills" or "Certifications" higher if they are critical for the job).
+
+2. Add a Summary Section:
+   - Create a professional summary tailored to the job description, highlighting key qualifications and career goals.
+
+3. Optimize Formatting:
+   - Ensure consistent formatting (e.g., bullet points, font size, spacing) for a polished look.
+
+---
+
+Language Enhancements
+1. Use Action-Oriented Language:
+   - Replace passive phrases with action verbs (e.g., "Managed," "Led," "Developed").
+
+2. Quantify Achievements:
+   - Add measurable results to accomplishments (e.g., "Reduced costs by 15%").
+
+3. Align Tone:
+   - Match the tone of the resume to the job description (e.g., formal for corporate roles, creative for design roles).
+
+---
+
+Job-Specific Customizations
+1. Focus on Relevant Experience:
+   - Highlight experiences and projects that directly relate to the job description.
+
+2. Add Industry-Specific Skills:
+   - Include skills or tools mentioned in the job description that are relevant to the industry.
+
+3. Include Certifications:
+   - Add certifications or training programs that match the job requirements.
+
+---
+
+Additional Suggestions
+1. Remove Irrelevant Information:
+   - Suggest removing experiences or skills that are not relevant to the job description.
+
+2. Add Soft Skills:
+   - Incorporate soft skills (e.g., teamwork, communication) if they are emphasized in the job description.
+
+3. Tailor for ATS (Applicant Tracking Systems):
+   - Ensure the resume includes keywords and formatting that optimize it for ATS scanning.
+
+---
+
+You need to return the updated resume with all changes implemented in markdown format and then a list of every change made with a brief description of how the change makes the resume better.
+(for example: changed "managed" to "led" because "led" is a more action-oriented verb and is more relevant to the leadership role)
+
+CRITICAL FORMATTING REQUIREMENTS:
+1. Start your response with the updated resume in markdown format
+2. Do NOT add any introductory text like "Here is the improved resume" or "Do NOT forget this"
+3. Do NOT include any explanatory text or headers before the resume content
+4. The updated resume should start directly with the resume content (e.g., "# Name" or "## Experience")
+5. After the complete updated resume, add the word "SPLIT" on its own line
+6. After "SPLIT", provide the list of changes made
+
+IMPORTANT: You MUST include both the updated resume AND the "SPLIT" keyword followed by the list of changes in your response.`;
+
+    const response = await openai.completions.create({
+      model: "gpt-4o-mini",
+      prompt: enhancedPrompt,
+      max_tokens: 16384,
+      temperature: 0.7,
+    });
+
+    const responseText = response.choices[0].text.trim();
+
+    const parts = responseText.split("SPLIT");
+
+    let updatedResume = "";
+    let suggestions = "";
+
+    if (parts.length >= 2) {
+      updatedResume = parts[0].trim();
+      suggestions = parts[1].trim();
+    } else {
+      suggestions = responseText.trim();
+      updatedResume = "";
+    }
+
+    if (updatedResume) {
+      let cleanedUpdatedResume = updatedResume;
+
+      cleanedUpdatedResume = cleanedUpdatedResume
+        .replace(/^.*?(?=^#\s+[A-Z]|^##\s+[A-Z]|^\*\*[A-Z])/ms, "")
+        .replace(/^Do NOT forget this\.?\s*$/gm, "")
+        .replace(/^Now, here is the improved resume for .*?:?\s*$/gm, "")
+        .replace(/^Here is the improved resume:?\s*$/gm, "")
+        .replace(/^Here is the updated resume:?\s*$/gm, "")
+        .replace(/^Here is your improved resume:?\s*$/gm, "")
+        .replace(/^Below is the improved resume:?\s*$/gm, "")
+        .replace(/^The improved resume is as follows:?\s*$/gm, "")
+        .replace(/^---\s*$/gm, "")
+        .replace(/^\s*---\s*$/gm, "")
+        .trim();
+
+      const jobDescriptionLines = jobDescription
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      jobDescriptionLines.forEach((line) => {
+        const escapedLine = line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const regex = new RegExp(`^\\s*${escapedLine}\\s*$`, "gm");
+        cleanedUpdatedResume = cleanedUpdatedResume.replace(regex, "");
+      });
+
+      cleanedUpdatedResume = cleanedUpdatedResume
+        .replace(/^JOB DESCRIPTION\/REQUIREMENTS:\s*$/gm, "")
+        .replace(/^Job Description:\s*$/gm, "")
+        .replace(/^Requirements:\s*$/gm, "")
+        .replace(/^Job Requirements:\s*$/gm, "")
+        .trim();
+
+      updatedResume = cleanedUpdatedResume;
+    }
+
+    const updateData = {
+      updatedContent: updatedResume,
+      suggestions: suggestions,
+      updatedAt: new Date(),
+    };
+
+    if (isFirstPrompt) {
+      updateData.jobDescription = prompt;
+    }
+
+    console.log("Updating resume with ID:", resume.id);
+    await Resume.update(updateData, {
+      where: { id: resume.id },
+    });
+
+    res.json({
+      suggestions: suggestions,
+      updatedResume: updatedResume,
+      originalResume: resume.content,
+      resumeId: resume.id,
+      isFirstPrompt: isFirstPrompt,
+    });
+  } catch (error) {
+    console.error("OpenAI API error:", error);
+    res.status(500).json({ error: "Failed to generate suggestions" });
+  }
+});
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {

@@ -3,25 +3,22 @@ const fs = require("fs").promises;
 
 class EmailService {
   constructor() {
-    // Check if SendGrid API key is configured
     if (!process.env.SENDGRID_API_KEY) {
       console.error("SENDGRID_API_KEY environment variable is not set");
       throw new Error("SendGrid API key not configured");
     }
 
-    // Configure email transporter using SendGrid
     this.transporter = nodemailer.createTransport({
       host: "smtp.sendgrid.net",
       port: 587,
-      secure: false, // true for 465, false for other ports
+      secure: false,
       auth: {
-        user: "apikey", // This is the literal string 'apikey'
+        user: "apikey",
         pass: process.env.SENDGRID_API_KEY,
       },
     });
   }
 
-  // Send resume via email with attachments
   async sendResumeEmail(userEmail, resumeData, attachments = []) {
     try {
       const { jobDescription, aiFeedback, resumeContent } = resumeData;
@@ -43,7 +40,6 @@ class EmailService {
     }
   }
 
-  // Generate HTML email template
   generateEmailTemplate(jobDescription, aiFeedback) {
     return `
       <!DOCTYPE html>
@@ -163,7 +159,6 @@ class EmailService {
     `;
   }
 
-  // Create email attachments from file paths
   async createAttachments(filePaths) {
     const attachments = [];
 
@@ -185,7 +180,6 @@ class EmailService {
     return attachments;
   }
 
-  // Get content type based on file extension
   getContentType(filename) {
     const ext = filename.split(".").pop().toLowerCase();
     const contentTypes = {

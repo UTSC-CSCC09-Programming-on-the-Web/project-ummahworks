@@ -39,7 +39,10 @@ export class ApiService {
   }
 
   getDashboardData(): Observable<any> {
-    return this.http.get(`${this.endpoint}/dashboard`, this.getHttpOptions());
+    return this.http.get(
+      `${this.endpoint}/payment/dashboard`,
+      this.getHttpOptions()
+    );
   }
 
   logout(): Observable<any> {
@@ -60,7 +63,7 @@ export class ApiService {
 
   createCheckoutSession(): Observable<any> {
     return this.http.post(
-      `${this.endpoint}/subscription/create-checkout`,
+      `${this.endpoint}/payment/create-checkout`,
       {},
       this.getHttpOptions()
     );
@@ -102,7 +105,7 @@ export class ApiService {
   }
 
   getAISuggestions(prompt: string, resumeId?: number): Observable<any> {
-    const url = `${this.endpoint}/ai/suggestions`;
+    const url = `${this.endpoint}/resumes/ai/suggestions`;
     const payload = resumeId ? { prompt, resumeId } : { prompt };
     return this.http.post(url, payload, this.getHttpOptions());
   }

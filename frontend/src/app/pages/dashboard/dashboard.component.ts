@@ -40,6 +40,7 @@ export class DashboardComponent implements OnInit {
   updatedResumeMarkdown: string = "";
   updatedResumeHtml: SafeHtml = "";
   isFirstPrompt: boolean = true;
+  currentResumeId: number | null = null;
 
   constructor(
     private api: ApiService,
@@ -85,9 +86,6 @@ export class DashboardComponent implements OnInit {
 
   private formatResumeText(text: string): string {
     if (!text) return "";
-
-    console.log("Raw markdown content:", text);
-
     let cleanedText = text;
 
     if (!text.includes("# ")) {
@@ -248,7 +246,6 @@ export class DashboardComponent implements OnInit {
       }
     );
 
-    console.log("Generated HTML:", html);
     return html;
   }
 
@@ -262,7 +259,6 @@ export class DashboardComponent implements OnInit {
     console.log("updateUpdatedResumeDisplay called with:", markdown);
     this.updatedResumeMarkdown = markdown;
     const html = this.formatResumeText(markdown);
-    console.log("Generated HTML:", html);
     this.updatedResumeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
     console.log("Updated resume HTML set");
   }
@@ -308,6 +304,7 @@ export class DashboardComponent implements OnInit {
         this.hasActivity = resumes.length > 0;
         if (resumes.length > 0) {
           const latestResume = resumes[resumes.length - 1];
+          this.currentResumeId = latestResume.id;
           this.uploadedFile = new File([], latestResume.originalName, {
             type: latestResume.fileType,
           });
@@ -371,13 +368,13 @@ export class DashboardComponent implements OnInit {
         }, 5000);
 
         if (response.resume && response.resume.content) {
+          this.currentResumeId = response.resume.id;
           this.currentResumeMarkdown = response.resume.content;
           this.updateResumeDisplay(this.currentResumeMarkdown);
         }
 
         const url = URL.createObjectURL(file);
         this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-        console.log("Resume URL:", this.resumeUrl);
         this.loadResumes();
 
         if (response.resume && response.resume.id) {
@@ -424,12 +421,14 @@ export class DashboardComponent implements OnInit {
     this.updatedResumeMarkdown = "";
     this.updatedResumeHtml = "";
 
-    let currentResumeId: number | undefined;
-    if (this.resumes.length > 0) {
-      currentResumeId = this.resumes[this.resumes.length - 1].id;
+    if (!this.currentResumeId) {
+      this.aiError = "No resume selected. Please select a resume first.";
+      this.aiLoading = false;
+      return;
     }
 
-    this.api.getAISuggestions(this.promptText, currentResumeId).subscribe({
+    console.log("Sending AI suggestions for resume ID:", this.currentResumeId);
+    this.api.getAISuggestions(this.promptText, this.currentResumeId).subscribe({
       next: (res) => {
         console.log("AI Response received:", res);
         this.aiSuggestions = res.suggestions || "";
@@ -530,6 +529,7 @@ export class DashboardComponent implements OnInit {
   }
 
   viewResume(resume: any): void {
+    this.currentResumeId = resume.id;
     this.uploadedFile = new File([], resume.originalName, {
       type: resume.fileType,
     });
