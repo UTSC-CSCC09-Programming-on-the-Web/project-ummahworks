@@ -37,6 +37,10 @@ export class DashboardComponent implements OnInit {
   aiSuggestions: string = "";
   aiLoading: boolean = false;
   aiError: string = "";
+  updatedResumeMarkdown: string = "";
+  updatedResumeHtml: SafeHtml = "";
+  isFirstPrompt: boolean = true;
+
 
   constructor(
     private api: ApiService,
@@ -255,6 +259,15 @@ export class DashboardComponent implements OnInit {
     this.currentResumeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
+  updateUpdatedResumeDisplay(markdown: string): void {
+    console.log("updateUpdatedResumeDisplay called with:", markdown);
+    this.updatedResumeMarkdown = markdown;
+    const html = this.formatResumeText(markdown);
+    console.log("Generated HTML:", html);
+    this.updatedResumeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+    console.log("Updated resume HTML set");
+  }
+
   ngOnInit(): void {
     this.loading = true;
     this.api.getCurrentUser().subscribe({
@@ -302,6 +315,9 @@ export class DashboardComponent implements OnInit {
           this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
             `/uploads/${latestResume.fileName}`
           );
+          this.isFirstPrompt = !latestResume.jobDescription;
+          
+          this.loadResumeContent(latestResume.id);
         }
       },
       error: (error) => {
@@ -358,6 +374,10 @@ export class DashboardComponent implements OnInit {
         this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
         console.log("Resume URL:", this.resumeUrl);
         this.loadResumes();
+        
+        if (response.resume && response.resume.id) {
+          this.loadResumeContent(response.resume.id);
+        }
       },
       error: (error) => {
         this.uploadStatus = `Upload failed: ${
@@ -396,28 +416,49 @@ export class DashboardComponent implements OnInit {
     this.aiSuggestions = "";
     this.aiError = "";
     this.aiLoading = true;
-    const token = localStorage.getItem("authToken") || "";
-    this.api.getAISuggestions(this.promptText, token).subscribe({
+    this.updatedResumeMarkdown = "";
+    this.updatedResumeHtml = "";
+    
+    let currentResumeId: number | undefined;
+    if (this.resumes.length > 0) {
+      currentResumeId = this.resumes[this.resumes.length - 1].id;
+    }
+    
+    this.api.getAISuggestions(this.promptText, currentResumeId).subscribe({
       next: (res) => {
-        this.aiSuggestions = res.suggestions || JSON.stringify(res);
+        console.log("AI Response received:", res);
+        this.aiSuggestions = res.suggestions || "";
+        this.updatedResumeMarkdown = res.updatedResume || "";
+        
+        console.log("Suggestions:", this.aiSuggestions);
+        console.log("Updated Resume:", this.updatedResumeMarkdown);
+        console.log("Updated Resume length:", this.updatedResumeMarkdown.length);
+        
+        if (this.updatedResumeMarkdown && this.updatedResumeMarkdown.trim().length > 0) {
+          console.log("Calling updateUpdatedResumeDisplay");
+          this.updateUpdatedResumeDisplay(this.updatedResumeMarkdown);
+        } else {
+          console.log("No updated resume content to display");
+        }
+        
+        this.promptText = "";
+        
+        this.isFirstPrompt = res.isFirstPrompt === false;
+        
         this.aiLoading = false;
       },
       error: (err) => {
+        console.error("AI Suggestions Error:", err);
         this.aiError = err.error?.message || "Failed to get suggestions.";
         this.aiLoading = false;
       },
     });
   }
 
-  viewResume(resume: any): void {
-    this.uploadedFile = new File([], resume.originalName, {
-      type: resume.fileType,
-    });
-    this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-      `/uploads/${resume.fileName}`
-    );
 
-    this.api.getResumeMarkdown(resume.id).subscribe({
+
+  private loadResumeContent(resumeId: number): void {
+    this.api.getResumeMarkdown(resumeId).subscribe({
       next: (response) => {
         this.currentResumeMarkdown = response.content || "";
         this.updateResumeDisplay(this.currentResumeMarkdown);
@@ -427,6 +468,65 @@ export class DashboardComponent implements OnInit {
         this.currentResumeMarkdown = "";
       },
     });
+    this.api.getUpdatedResume(resumeId).subscribe({
+      next: (response) => {
+        if (response.updatedContent) {
+          this.updatedResumeMarkdown = response.updatedContent;
+          this.updateUpdatedResumeDisplay(this.updatedResumeMarkdown);
+          
+          if (response.suggestions) {
+            this.aiSuggestions = response.suggestions;
+          } else {
+            this.aiSuggestions = "";
+          }
+          this.aiError = "";
+        } else {
+          if (!this.aiLoading) {
+            this.updatedResumeMarkdown = "";
+            this.updatedResumeHtml = "";
+            this.aiSuggestions = "";
+          }
+        }
+      },
+      error: (error) => {
+        console.error("Failed to fetch updated resume:", error);
+        if (!this.aiLoading) {
+          this.updatedResumeMarkdown = "";
+          this.updatedResumeHtml = "";
+          this.aiSuggestions = "";
+        }
+      },
+    });
+  }
+
+
+
+  formatSuggestions(suggestions: string): string {
+    if (!suggestions) return "";
+    
+    let formatted = suggestions
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^(\d+\.\s+)(\*\*.*?\*\*)/gm, '<div class="change-item"><h4>$1$2</h4>')
+      .replace(/^(\*\*.*?\*\*)/gm, '<div class="change-item"><h4>$1</h4>')
+      .replace(/\n/g, '<br>')
+      .replace(/<br><br>/g, '</div><div class="change-item">')
+      .replace(/^/, '<div class="changes-summary">')
+      .replace(/$/, '</div>');
+    
+    formatted = formatted.replace(/<div class="change-item"><\/div>/g, '');
+    
+    return formatted;
+  }
+
+  viewResume(resume: any): void {
+    this.uploadedFile = new File([], resume.originalName, {
+      type: resume.fileType,
+    });
+    this.resumeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+      `/uploads/${resume.fileName}`
+    );
+    this.loadResumeContent(resume.id);
   }
 
   deleteResume(resumeId: number): void {

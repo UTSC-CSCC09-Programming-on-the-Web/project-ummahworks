@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS resumes (
     file_type VARCHAR(100) NOT NULL,
     file_path TEXT NOT NULL,
     content TEXT,
+    updated_content TEXT,
+    job_description TEXT,
+    suggestions TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

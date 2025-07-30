@@ -16,6 +16,9 @@ const Resume = sequelize.define(
     fileType: { type: DataTypes.STRING, allowNull: false, field: "file_type" },
     filePath: { type: DataTypes.TEXT, allowNull: false, field: "file_path" },
     content: { type: DataTypes.TEXT, allowNull: true, field: "content" },
+    updatedContent: { type: DataTypes.TEXT, allowNull: true, field: "updated_content" },
+    jobDescription: { type: DataTypes.TEXT, allowNull: true, field: "job_description" },
+    suggestions: { type: DataTypes.TEXT, allowNull: true, field: "suggestions" },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,

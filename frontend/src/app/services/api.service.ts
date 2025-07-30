@@ -98,8 +98,14 @@ export class ApiService {
     return this.http.delete(`${this.endpoint}/resumes/${resumeId}`, this.getHttpOptions());
   }
 
-  getAISuggestions(prompt: string, token: string): Observable<any> {
+  getAISuggestions(prompt: string, resumeId?: number): Observable<any> {
     const url = `${this.endpoint}/ai/suggestions`;
-    return this.http.post(url, { prompt }, this.getHttpOptions());
+    const payload = resumeId ? { prompt, resumeId } : { prompt };
+    return this.http.post(url, payload, this.getHttpOptions());
+  }
+
+  // Get updated resume content
+  getUpdatedResume(resumeId: number): Observable<any> {
+    return this.http.get(`${this.endpoint}/resumes/${resumeId}/updated`, this.getHttpOptions());
   }
 }

@@ -127,71 +127,78 @@
         "
         class="edit-resume-section"
       >
-        <h2 class="edit-resume-title">Edit Resume</h2>
+        <div class="edit-resume-header">
+          <h2 class="edit-resume-title">Edit Resume</h2>
+        </div>
         <div class="edit-resume-wrapper">
-          <div class="edit-resume-viewer">
-            <div class="markdown-content" *ngIf="currentResumeMarkdown">
-              <h3>Resume Content</h3>
-              <div
-                class="rendered-content"
-                [innerHTML]="currentResumeHtml"
-              ></div>
+          <!-- Four Section Layout -->
+          <div class="resume-grid-container">
+            <!-- Section 1: Original Resume -->
+            <div class="resume-section original-resume">
+              <h3>Original Resume</h3>
+              <div class="resume-paper-container">
+                <div class="resume-paper" *ngIf="currentResumeMarkdown">
+                  <div class="resume-content" [innerHTML]="currentResumeHtml"></div>
+                </div>
+                <div class="no-content" *ngIf="!currentResumeMarkdown">
+                  <p>No content available. Please upload a DOCX file to see the converted content.</p>
+                </div>
+              </div>
+            </div>
 
-              <!-- Debug section - remove this after fixing -->
-              <details
-                style="
-                  margin-top: 20px;
-                  padding: 10px;
-                  background: #f7fafc;
-                  border: 1px solid #e2e8f0;
-                  border-radius: 5px;
-                "
-              >
-                <summary style="cursor: pointer; font-weight: bold">
-                  Debug: Raw Markdown Content
-                </summary>
-                <pre
-                  style="white-space: pre-wrap; font-size: 12px; color: #666"
-                  >{{ currentResumeMarkdown }}</pre
-                >
-              </details>
-            </div>
-            <div class="no-content" *ngIf="!currentResumeMarkdown">
-              <p>
-                No content available. Please upload a DOCX file to see the
-                converted content.
-              </p>
-            </div>
-          </div>
-          <div class="edit-resume-interaction-panel">
-            <div class="edit-suggestions-area">
-              <h4>Suggestions</h4>
-              <div *ngIf="aiLoading" class="loading">
-                Loading suggestions...
-              </div>
-              <div *ngIf="aiError" class="error">{{ aiError }}</div>
-              <div
-                *ngIf="aiSuggestions && !aiLoading"
-                class="suggestions-result"
-              >
-                <pre>{{ aiSuggestions }}</pre>
+            <!-- Section 2: Updated Resume -->
+            <div class="resume-section updated-resume">
+              <h3>Updated Resume</h3>
+              <div class="resume-paper-container">
+                <div class="resume-paper" *ngIf="updatedResumeMarkdown">
+                  <div class="resume-content updated-resume-content" [innerHTML]="updatedResumeHtml"></div>
+                </div>
+                <div class="no-content" *ngIf="!updatedResumeMarkdown">
+                  <p>Get AI suggestions to see the updated resume here.</p>
+                </div>
               </div>
             </div>
-            <div class="edit-prompt-area">
-              <label for="prompt-input">Ask me about your resume:</label>
-              <textarea
-                id="prompt-input"
-                [(ngModel)]="promptText"
-                rows="4"
-                placeholder="Type your prompt here..."
-              ></textarea>
-              <button
-                (click)="getAISuggestions()"
-                [disabled]="aiLoading || !promptText.trim()"
-                class="send-prompt-btn"
-              >
-                Send
-              </button>
+
+            <!-- Section 3: Summary of Changes -->
+            <div class="resume-section ai-suggestions">
+              <h3>Summary of Changes</h3>
+              <div class="suggestions-container">
+                <div *ngIf="aiLoading" class="loading">
+                  Analyzing your resume and job description...
+                </div>
+                <div *ngIf="aiError" class="error">
+                  <strong>Error:</strong> {{ aiError }}
+                </div>
+                <div
+                  *ngIf="aiSuggestions && !aiLoading"
+                  class="suggestions-result"
+                  [innerHTML]="formatSuggestions(aiSuggestions)"
+                ></div>
+
+              </div>
+            </div>
+
+            <!-- Section 4: Prompt Area -->
+            <div class="resume-section prompt-area">
+              <h3>Job Description & Analysis</h3>
+              <div class="prompt-container">
+                <div class="prompt-input-area">
+                  <label for="prompt-input">Job Description/Requirements:</label>
+                  <textarea
+                    id="prompt-input"
+                    [(ngModel)]="promptText"
+                    rows="6"
+                    [placeholder]="isFirstPrompt ? 'Paste your job description here' : 'Ask for specific refinements'"
+                  ></textarea>
+                  <button
+                    (click)="getAISuggestions()"
+                    [disabled]="aiLoading"
+                    class="send-prompt-btn"
+                  >
+                    {{ isFirstPrompt ? 'Get AI Suggestions' : 'Refine Resume' }}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -517,27 +517,106 @@
   background: #fff;
   border-radius: 1.5rem;
   box-shadow: 0 8px 32px rgba(102, 126, 234, 0.1);
-  padding: 2.5rem 2rem;
-  margin: 2.5rem auto;
+  padding: 1.5rem;
+  margin: 1rem auto;
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%;
+  min-height: 98vh;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+.edit-resume-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
 .edit-resume-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #2d3748;
-  margin-bottom: 2rem;
-  align-self: flex-start;
+  margin: 0;
 }
+
+
 .edit-resume-wrapper {
-  display: flex;
-  gap: 2rem;
-  align-items: stretch;
   width: 100%;
+  height: 100%;
+  min-height: 90vh;
+}
+
+.resume-grid-container {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 1rem;
+  width: 100%;
+  height: 95vh;
+  min-height: 95vh;
+}
+
+.resume-section {
+  background: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.resume-section h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #2d3748;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 0.25rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Letter-size paper styling */
+.resume-paper-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
   justify-content: center;
+  align-items: flex-start;
+  padding: 1rem 0;
+}
+
+.resume-paper {
+  width: 100%;
+  height: 100%;
+  background: white;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  border-radius: 0.5rem;
+}
+
+.resume-content {
+  height: 100%;
+  overflow-y: auto;
+  font-family: "Times New Roman", serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #000;
+  padding: 0;
+}
+
+.updated-resume-content {
+  border-left: 4px solid #48bb78;
+  padding-left: 0.5rem;
+  background: linear-gradient(90deg, rgba(72, 187, 120, 0.05) 0%, transparent 100%);
 }
 .edit-resume-viewer {
   flex: 3 1 65%;
@@ -549,9 +628,10 @@
 }
 
 .markdown-content {
-  padding: 1.5rem;
+  padding: 0;
   height: 100%;
   overflow-y: auto;
+  flex: 1;
 }
 
 .markdown-content h3 {
@@ -564,16 +644,17 @@
 }
 
 .rendered-content {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    sans-serif;
+  font-family: "Times New Roman", serif;
   line-height: 1.6;
-  color: #374151;
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  color: #000;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 100%;
+  font-size: 14px;
 }
 
 .resume-name {
@@ -763,14 +844,26 @@
   border: none;
   background: white;
 }
-.edit-resume-interaction-panel {
-  flex: 1 1 35%;
+/* AI Suggestions Section */
+.suggestions-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+/* Prompt Area Section */
+.prompt-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 1.5rem;
-  min-width: 260px;
-  max-width: 340px;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.prompt-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 .edit-suggestions-area {
   background: #fff;
@@ -787,9 +880,98 @@
   font-weight: 700;
 }
 .suggestion-placeholder {
-  color: #a0aec0;
-  font-size: 1rem;
-  margin-top: 0.5rem;
+  color: #718096;
+  font-style: italic;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 0.5rem;
+  border: 1px dashed #cbd5e0;
+}
+
+.suggestion-placeholder ol {
+  margin: 0.5rem 0 0 1rem;
+  padding-left: 0.5rem;
+}
+
+.suggestion-placeholder li {
+  margin-bottom: 0.25rem;
+}
+
+.suggestions-result {
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border-left: 4px solid #667eea;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.suggestions-result h4 {
+  color: #2d3748;
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.suggestions-result p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+.suggestions-result strong {
+  color: #2d3748;
+}
+
+.suggestions-result em {
+  color: #4a5568;
+}
+
+.changes-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.change-item {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.change-item h4 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+}
+
+.change-item p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #667eea;
+  font-weight: 500;
+}
+
+
+
+.error {
+  color: #e53e3e;
+  background: #fed7d7;
+  border: 1px solid #feb2b2;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.9rem;
 }
 .edit-prompt-area {
   background: #f7fafc;
@@ -797,24 +979,26 @@
   padding: 1.2rem;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.05);
 }
-.edit-prompt-area label {
+.prompt-input-area label {
   font-weight: 600;
   color: #4a5568;
   margin-bottom: 0.5rem;
   display: block;
+  font-size: 0.875rem;
 }
-.edit-prompt-area textarea {
+
+
+.prompt-input-area textarea {
   width: 100%;
   border-radius: 0.5rem;
   border: 1px solid #cbd5e0;
   padding: 0.75rem;
-  font-size: 1rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
   resize: vertical;
-  min-height: 60px;
+  min-height: 120px;
   background: #fff;
   color: #2d3748;
+  font-family: inherit;
 }
 .send-prompt-btn {
   background: linear-gradient(135deg, #667eea, #764ba2);
@@ -824,8 +1008,33 @@
   padding: 0.5rem 1.5rem;
   font-weight: 600;
   font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 1;
+}
+
+.send-prompt-btn:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.send-prompt-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+.send-prompt-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
-  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+.send-prompt-btn:disabled:hover {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  transform: none;
+  box-shadow: none;
 }
 @media (max-width: 1200px) {
   .edit-resume-section {
@@ -839,15 +1048,27 @@
     min-height: 250px;
   }
 }
-@media (max-width: 900px) {
-  .edit-resume-wrapper {
-    flex-direction: column;
+@media (max-width: 1200px) {
+  .resume-grid-container {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
     gap: 1rem;
   }
-  .edit-resume-interaction-panel {
-    max-width: 100%;
-    min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .resume-grid-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 1rem;
+    height: auto;
+    min-height: auto;
   }
+  
+  .resume-section {
+    min-height: 60vh;
+  }
+  
   .edit-resume-iframe {
     min-width: 0;
     width: 100%;

@@ -321,4 +321,26 @@ router.get("/:id/markdown", authenticateToken, async (req, res) => {
   }
 });
 
+router.get("/:id/updated", authenticateToken, async (req, res) => {
+  try {
+    const resume = await Resume.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+
+    if (!resume) {
+      return res.status(404).json({ error: "Resume not found" });
+    }
+
+    res.json({ 
+      updatedContent: resume.updatedContent,
+      jobDescription: resume.jobDescription,
+      originalContent: resume.content,
+      suggestions: resume.suggestions
+    });
+  } catch (error) {
+    console.error("Error fetching updated resume:", error);
+    res.status(500).json({ error: "Failed to fetch updated resume" });
+  }
+});
+
 module.exports = router;
